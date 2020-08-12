@@ -411,6 +411,10 @@ static int vidioc_dqbuf(struct file *file, void *priv, struct v4l2_buffer *buf)
 			/* skip frame */
 			buf->index = -2;
 			ret = 0;
+		} else if ( ctx->codec.dec.frame_prop == -20 ){
+			/* H/w Timeout */
+			buf->index = -20;
+			ret = 0;
 		} else {
 			/* no decoded frame */
 			buf->index = -1;
@@ -1233,7 +1237,7 @@ int vpu_dec_decode_slice(struct nx_vpu_ctx *ctx)
 	if (0 < ret) {
 		NX_DbgMsg(INFO_MSG, "need more frame.\n");
 		dec_ctx->frame_prop = 2;
-	} else if (decArg.indexFrameDisplay >= 0) {
+	} else if ((decArg.indexFrameDisplay >= 0) && (0==ret)) {
 		dec_ctx->frame_prop = 0;
 
 		spin_lock_irqsave(&dev->irqlock, flags);
@@ -1256,13 +1260,16 @@ int vpu_dec_decode_slice(struct nx_vpu_ctx *ctx)
 		}
 
 		spin_unlock_irqrestore(&dev->irqlock, flags);
-	} else if (decArg.indexFrameDisplay == -3) {
+	} else if ((decArg.indexFrameDisplay == -3) && (0==ret)) {
 		NX_DbgMsg(INFO_MSG, "delayed Output(%d).\n",
 			decArg.indexFrameDisplay);
 		dec_ctx->frame_prop = 1;
-	} else if (decArg.indexFrameDisplay == -2) {
+	} else if ((decArg.indexFrameDisplay == -2) && (0==ret)) {
 		NX_DbgMsg(INFO_MSG, "Skip Frame.\n");
 		dec_ctx->frame_prop = -2;
+	} else if (ret < 0){
+		NX_DbgMsg(INFO_MSG, "Decode Error. (%d)\n", ret);
+		dec_ctx->frame_prop = -20;
 	} else {
 		NX_DbgMsg(INFO_MSG, "There is not decoded image.\n");
 		dec_ctx->frame_prop = -1;
