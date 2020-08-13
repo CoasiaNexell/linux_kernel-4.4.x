@@ -71,6 +71,15 @@ static struct v4l2_queryctrl controls[] = {
 		.step = 1,
 		.default_value = 0,
 	},
+	{
+		.id = V4L2_CID_DISABLE_VIDEO_OUT_REORDER,
+		.type = V4L2_CTRL_TYPE_BOOLEAN,
+		.name = "Disable videoOutReorder",
+		.minimum = 0,
+		.maximum = 1,
+		.step = 1,
+		.default_value = 0,
+	},
 };
 #define NUM_CTRLS ARRAY_SIZE(controls)
 
@@ -402,6 +411,10 @@ static int vidioc_dqbuf(struct file *file, void *priv, struct v4l2_buffer *buf)
 			/* skip frame */
 			buf->index = -2;
 			ret = 0;
+		} else if ( ctx->codec.dec.frame_prop == -20 ){
+			/* H/w Timeout */
+			buf->index = -20;
+			ret = 0;
 		} else {
 			/* no decoded frame */
 			buf->index = -1;
@@ -458,6 +471,8 @@ static int vidioc_s_ctrl(struct file *file, void *priv, struct v4l2_control
 
 	if (ctrl->id == V4L2_CID_MPEG_VIDEO_THUMBNAIL_MODE) {
 		ctx->codec.dec.thumbnailMode = ctrl->value;
+	} else if (ctrl->id == V4L2_CID_DISABLE_VIDEO_OUT_REORDER) {
+		ctx->codec.dec.disableVideoOutReorder = ctrl->value;
 	} else {
 		NX_ErrMsg("Invalid control(ID = %x)\n", ctrl->id);
 		return -EINVAL;
@@ -923,6 +938,9 @@ int vpu_dec_parse_vid_cfg(struct nx_vpu_ctx *ctx)
 	seqArg.outWidth = ctx->width;
 	seqArg.outHeight = ctx->height;
 
+	/* Used when there is no B-Frame. */
+	seqArg.disableOutReorder = dec_ctx->disableVideoOutReorder;
+
 	seqArg.thumbnailMode = dec_ctx->thumbnailMode;
 
 	ret = NX_VpuDecSetSeqInfo(ctx->hInst, &seqArg);
@@ -1219,7 +1237,7 @@ int vpu_dec_decode_slice(struct nx_vpu_ctx *ctx)
 	if (0 < ret) {
 		NX_DbgMsg(INFO_MSG, "need more frame.\n");
 		dec_ctx->frame_prop = 2;
-	} else if (decArg.indexFrameDisplay >= 0) {
+	} else if ((decArg.indexFrameDisplay >= 0) && (0==ret)) {
 		dec_ctx->frame_prop = 0;
 
 		spin_lock_irqsave(&dev->irqlock, flags);
@@ -1242,13 +1260,16 @@ int vpu_dec_decode_slice(struct nx_vpu_ctx *ctx)
 		}
 
 		spin_unlock_irqrestore(&dev->irqlock, flags);
-	} else if (decArg.indexFrameDisplay == -3) {
+	} else if ((decArg.indexFrameDisplay == -3) && (0==ret)) {
 		NX_DbgMsg(INFO_MSG, "delayed Output(%d).\n",
 			decArg.indexFrameDisplay);
 		dec_ctx->frame_prop = 1;
-	} else if (decArg.indexFrameDisplay == -2) {
+	} else if ((decArg.indexFrameDisplay == -2) && (0==ret)) {
 		NX_DbgMsg(INFO_MSG, "Skip Frame.\n");
 		dec_ctx->frame_prop = -2;
+	} else if (ret < 0){
+		NX_DbgMsg(INFO_MSG, "Decode Error. (%d)\n", ret);
+		dec_ctx->frame_prop = -20;
 	} else {
 		NX_DbgMsg(INFO_MSG, "There is not decoded image.\n");
 		dec_ctx->frame_prop = -1;
