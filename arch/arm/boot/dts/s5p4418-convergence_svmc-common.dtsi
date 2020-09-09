@@ -794,51 +794,11 @@
 		out_format = <3>;
 	};
 };
-#ifdef CONFIG_DRM_NX_LVDS
-&dp_drm_lvds {
-	status = "ok";
 
-	/* crtcs-possible-mask = <0x2>; */
-	voltage_level = <0x3f>;
-
-	display-timing {
-		clock-frequency = <30000000>;
-		hactive = <800>;
-		vactive = <480>;
-
-		hfront-porch = <40>;
-		hback-porch = <88>;
-		hsync-len = <48>;
-
-		vfront-porch = <13>;
-		vback-porch = <32>;
-		vsync-len = <3>;
-
-		hsync-active = <1>;
-		vsync-active = <1>;
-		pixelclk-active = <0>;
-		de-active = <1>;
-	};
-
-	dp_control {
-		clk_src_lv0 = <2>;
-		clk_div_lv0 = <20>;
-		clk_src_lv1 = <7>;
-		clk_div_lv1 = <1>;
-		out_format = <2>;
-		swap_rb = <3>;
-		invert_field = <1>;
-		yc_order = <0>;
-	};
-};
-#endif
-
-#ifdef CONFIG_DRM_NX_HDMI
 &dp_drm_hdmi {
 	ddc-i2c-bus = <&i2c_gpio9>;
 	status = "ok";
 };
-#endif
 
 &dw_mmc_0 {
 	num-slots = <1>;
