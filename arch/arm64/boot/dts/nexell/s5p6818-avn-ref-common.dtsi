@@ -74,10 +74,10 @@
 			};
 		};
 
-                dynamic-freq@bb000 {
-                        supply_name = "vdd_core_regulator";
-                        vdd_core_regulator-supply = <&VCC_DCDC0>;
-                };
+		dynamic-freq@bb000 {
+			supply_name = "vdd_core_regulator";
+			vdd_core_regulator-supply = <&VCC_DCDC0>;
+		};
 
 		serial0:serial@c00a1000 {
 			dmas = <&pl08xdma0 2>, <&pl08xdma0 3>;
@@ -614,40 +614,6 @@
 		NX_ACTION_START NX_ACTION_TYPE_GPIO 1 0 1 0 10 NX_ACTION_END
 		NX_ACTION_START NX_ACTION_TYPE_GPIO 0 1 10 NX_ACTION_END
 		>;
-	};
-};
-
-#include "tw9900_rearcam_regset.dtsi"
-&rearcam {
-	rotation = <0>;
-	rear_cam_dev = <&clipper_0>;
-	sensor_reg = <&sensor_tw9900>;
-	display = <&dp_drm>;
-	dp_drm_dev = <&dp_drm_lvds>;
-	width = <704>;
-	height = <480>;
-	skip_frame = <0>;
-	status = "okay";
-
-	gpio {
-		event-gpio = <&alive_0 3 0>;
-		active_high = <0>;
-		detect_delay = <0>;
-	};
-
-	deinterlace {
-		use = <0>;
-		divide_frame = <0>;
-		is_odd_first = <1>;
-	};
-
-	mlc {
-		module = <0>;
-		format = <0x06530000>;
-	};
-
-	dpc {
-		module = <0>;
 	};
 };
 
