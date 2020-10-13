@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1de9cac5_6c20eade",
+        "filename": "arch/arm64/boot/dts/nexell/s5p6818-convergence_svmc-common.dtsi",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1000008
+      },
+      "writtenOn": "2020-10-13T00:48:15Z",
+      "side": 1,
+      "message": "Please change name.",
+      "range": {
+        "startLine": 2,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 48
+      },
+      "revId": "f3dc0d6385b65ba5609607971095a6a9b10dc331",
+      "serverId": "f3c90331-7953-4206-aadc-b7348badd027",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b0e73f9_6616c73f",
+        "filename": "arch/arm64/boot/dts/nexell/s5p6818-convergence_svmc-rev01.dts",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1000008
+      },
+      "writtenOn": "2020-10-13T00:48:15Z",
+      "side": 1,
+      "message": "Please change name.",
+      "range": {
+        "startLine": 2,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 48
+      },
+      "revId": "f3dc0d6385b65ba5609607971095a6a9b10dc331",
+      "serverId": "f3c90331-7953-4206-aadc-b7348badd027",
+      "unresolved": true
+    }
+  ]
+}
