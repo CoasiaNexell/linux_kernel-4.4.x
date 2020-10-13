@@ -84,6 +84,7 @@ struct spidev_data {
 	u8			*tx_buffer;
 	u8			*rx_buffer;
 	u32			speed_hz;
+	int			mmaped;
 };
 
 static LIST_HEAD(device_list);
@@ -101,10 +102,18 @@ spidev_sync(struct spidev_data *spidev, struct spi_message *message)
 	DECLARE_COMPLETION_ONSTACK(done);
 	int status;
 	struct spi_device *spi;
+	struct spi_master *master;
 
 	spin_lock_irq(&spidev->spi_lock);
 	spi = spidev->spi;
 	spin_unlock_irq(&spidev->spi_lock);
+
+	master = spi->master;
+
+	if (master->prepare_message) {
+		if(message->spi == NULL) message->spi = spi;
+		master->prepare_message(master, message);
+	}
 
 	if (spi == NULL)
 		status = -ESHUTDOWN;
@@ -267,10 +276,12 @@ static int spidev_message(struct spidev_data *spidev,
 				goto done;
 			}
 			k_tmp->tx_buf = tx_buf;
-			if (copy_from_user(tx_buf, (const u8 __user *)
-						(uintptr_t) u_tmp->tx_buf,
-					u_tmp->len))
-				goto done;
+			if( (spidev->mmaped == 0) || (u_tmp->rx_buf != 0) ) {
+				if (copy_from_user(tx_buf, (const u8 __user *)
+							(uintptr_t) u_tmp->tx_buf,
+						u_tmp->len))
+					goto done;
+			}
 			tx_buf += k_tmp->len;
 		}
 
@@ -618,6 +629,7 @@ static int spidev_open(struct inode *inode, struct file *filp)
 	}
 
 	spidev->users++;
+	spidev->mmaped = 0;
 	filp->private_data = spidev;
 	nonseekable_open(inode, filp);
 
@@ -667,12 +679,42 @@ static int spidev_release(struct inode *inode, struct file *filp)
 	return 0;
 }
 
+static const struct vm_operations_struct mmap_mem_ops = {
+#ifdef CONFIG_HAVE_IOREMAP_PROT
+	.access = generic_access_phys
+#endif
+};
+
+static int spidev_mmap(struct file *file, struct vm_area_struct *vma)
+{
+	struct spidev_data      *spidev;
+
+	size_t size = vma->vm_end - vma->vm_start;
+
+	spidev = file->private_data;
+	spidev->mmaped = 1;
+
+	vma->vm_ops = &mmap_mem_ops;
+
+	/* Remap-pfn-range will mark the range VM_IO */
+	if (remap_pfn_range(vma,
+						vma->vm_start,
+						virt_to_phys(spidev->tx_buffer) >> PAGE_SHIFT,
+						size,
+						vma->vm_page_prot)) {
+		return -EAGAIN;
+	}
+	return 0;
+}
+
+
 static const struct file_operations spidev_fops = {
 	.owner =	THIS_MODULE,
 	/* REVISIT switch to aio primitives, so that userspace
 	 * gets more complete API coverage.  It'll simplify things
 	 * too, except for the locking.
 	 */
+	.mmap =		spidev_mmap,
 	.write =	spidev_write,
 	.read =		spidev_read,
 	.unlocked_ioctl = spidev_ioctl,
