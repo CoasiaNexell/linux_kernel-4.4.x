@@ -933,6 +933,8 @@ static int spi_map_msg(struct spi_master *master, struct spi_message *msg)
  * drivers which impelment a transfer_one() operation.  It provides
  * standard handling of delays and chip select management.
  */
+char spi_dbg_str[2048];
+char *spi_dbg_str_p;
 static int spi_transfer_one_message(struct spi_master *master,
 				    struct spi_message *msg)
 {
@@ -943,11 +945,13 @@ static int spi_transfer_one_message(struct spi_master *master,
 	struct spi_statistics *statm = &master->statistics;
 	struct spi_statistics *stats = &msg->spi->statistics;
 
+	spi_dbg_str_p = spi_dbg_str;
 	spi_set_cs(msg->spi, true);
 
 	SPI_STATISTICS_INCREMENT_FIELD(statm, messages);
 	SPI_STATISTICS_INCREMENT_FIELD(stats, messages);
 
+	spi_dbg_str_p += sprintf(spi_dbg_str_p, "[");
 	list_for_each_entry(xfer, &msg->transfers, transfer_list) {
 		trace_spi_transfer_start(msg, xfer);
 
@@ -1006,8 +1010,10 @@ static int spi_transfer_one_message(struct spi_master *master,
 					 &msg->transfers)) {
 				keep_cs = true;
 			} else {
+				spi_dbg_str_p += sprintf(spi_dbg_str_p, "]");
 				spi_set_cs(msg->spi, false);
 				udelay(10);
+				spi_dbg_str_p += sprintf(spi_dbg_str_p, "[");
 				spi_set_cs(msg->spi, true);
 			}
 		}
@@ -1016,8 +1022,11 @@ static int spi_transfer_one_message(struct spi_master *master,
 	}
 
 out:
-	if (ret != 0 || !keep_cs)
+	if (ret == 0 || !keep_cs) {
 		spi_set_cs(msg->spi, false);
+		spi_dbg_str_p += sprintf(spi_dbg_str_p, "]");
+	}
+	//printk("{%s}\n", spi_dbg_str);
 
 	if (msg->status == -EINPROGRESS)
 		msg->status = ret;
