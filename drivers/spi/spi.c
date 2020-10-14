@@ -1016,7 +1016,7 @@ static int spi_transfer_one_message(struct spi_master *master,
 	}
 
 out:
-	if (ret != 0 || !keep_cs)
+	if (ret == 0 || !keep_cs)
 		spi_set_cs(msg->spi, false);
 
 	if (msg->status == -EINPROGRESS)
