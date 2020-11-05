@@ -598,6 +598,7 @@
 	};
 };
 
+/*
 #include "tw9900_rearcam_regset.dtsi"
 &rearcam {
 	pinctrl-names = "rear_cam_clk";
@@ -633,6 +634,7 @@
 		module = <0>;
 	};
 };
+*/
 
 &dp_drm {
 	status = "okay";
