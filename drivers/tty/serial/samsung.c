@@ -630,9 +630,14 @@ static irqreturn_t s3c24xx_serial_rx_chars_dma(void *dev_id)
 	spin_lock_irqsave(&port->lock, flags);
 
 	if (!(utrstat & S3C2410_UTRSTAT_TIMEOUT)) {
-		s3c64xx_start_rx_dma(ourport);
-		if (ourport->rx_mode == S3C24XX_RX_PIO)
+		if (ourport->rx_mode == S3C24XX_RX_DMA)	{
+			udelay(100);
+			goto finish;
+		} else {
+			s3c64xx_start_rx_dma(ourport);
 			enable_rx_dma(ourport);
+		}
+
 		goto finish;
 	}
 
