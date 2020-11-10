@@ -716,12 +716,8 @@ static void s3c24xx_serial_rx_drain_fifo(struct s3c24xx_uart_port *ourport)
 		port->icount.rx++;
 
 		if (unlikely(uerstat & S3C2410_UERSTAT_ANY)) {
-			dbg("rxerr: port ch=0x%02x, rxs=0x%08x\n",
-			    ch, uerstat);
-
 			/* check for break */
 			if (uerstat & S3C2410_UERSTAT_BREAK) {
-				dbg("break!\n");
 				port->icount.brk++;
 				if (uart_handle_break(port))
 					continue; /* Ignore character */
@@ -1063,8 +1059,7 @@ static int s3c24xx_serial_startup(struct uart_port *port)
 	struct s3c24xx_uart_port *ourport = to_ourport(port);
 	int ret;
 
-	dbg("s3c24xx_serial_startup: port=%p (%08llx,%p)\n",
-	    port, (unsigned long long)port->mapbase, port->membase);
+	dbg("UART%d:(%s)\n", port->line, __func__);
 
 	rx_enabled(port) = 1;
 
@@ -1078,8 +1073,6 @@ static int s3c24xx_serial_startup(struct uart_port *port)
 
 	ourport->rx_claimed = 1;
 
-	dbg("requesting tx irq...\n");
-
 	tx_enabled(port) = 1;
 
 	ret = request_irq(ourport->tx_irq, s3c24xx_serial_tx_chars, 0,
@@ -1091,8 +1084,6 @@ static int s3c24xx_serial_startup(struct uart_port *port)
 	}
 
 	ourport->tx_claimed = 1;
-
-	dbg("s3c24xx_serial_startup ok\n");
 
 	/* the port reset code should have done the correct
 	 * register setup for the port controls
@@ -1141,9 +1132,18 @@ static int s3c64xx_serial_startup(struct uart_port *port)
 	spin_lock_irqsave(&port->lock, flags);
 
 	ufcon = rd_regl(port, S3C2410_UFCON);
-	ufcon |= S3C2410_UFCON_RESETRX | S5PV210_UFCON_RXTRIG8;
+	ufcon |= S3C2410_UFCON_RESETRX;
 	if (!uart_console(port))
 		ufcon |= S3C2410_UFCON_RESETTX;
+	wr_regl(port, S3C2410_UFCON, ufcon);
+
+	ufcon = rd_regl(port, S3C2410_UFCON);
+	ufcon &= ~S5PV210_UFCON_RXTRIG64;
+	
+	if (port->line > 2)
+		ufcon |= S5PV210_UFCON_RXTRIG8;
+	else
+		ufcon |= S5PV210_UFCON_RXTRIG32;
 	wr_regl(port, S3C2410_UFCON, ufcon);
 
 	enable_rx_pio(ourport);
