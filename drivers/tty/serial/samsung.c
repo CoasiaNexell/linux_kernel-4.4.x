@@ -615,24 +615,28 @@ static void s3c24xx_serial_rx_drain_fifo(struct s3c24xx_uart_port *ourport);
 
 static irqreturn_t s3c24xx_serial_rx_chars_dma(void *dev_id)
 {
-	unsigned int utrstat, ufstat, received;
 	struct s3c24xx_uart_port *ourport = dev_id;
 	struct uart_port *port = &ourport->port;
 	struct s3c24xx_uart_dma *dma = ourport->dma;
+	struct dma_tx_state state;
 	struct tty_struct *tty = tty_port_tty_get(&ourport->port.state->port);
 	struct tty_port *t = &port->state->port;
 	unsigned long flags;
-	struct dma_tx_state state;
+	unsigned int utrstat, received = 0;
 
 	utrstat = rd_regl(port, S3C2410_UTRSTAT);
-	ufstat = rd_regl(port, S3C2410_UFSTAT);
 
 	spin_lock_irqsave(&port->lock, flags);
 
 	if (!(utrstat & S3C2410_UTRSTAT_TIMEOUT)) {
-		s3c64xx_start_rx_dma(ourport);
-		if (ourport->rx_mode == S3C24XX_RX_PIO)
+		if (ourport->rx_mode == S3C24XX_RX_DMA)	{
+			udelay(100);
+			goto finish;
+		} else {
+			s3c64xx_start_rx_dma(ourport);
 			enable_rx_dma(ourport);
+		}
+
 		goto finish;
 	}
 
@@ -668,7 +672,7 @@ static void s3c24xx_serial_rx_drain_fifo(struct s3c24xx_uart_port *ourport)
 	unsigned int fifocnt = 0;
 	int max_count = port->fifosize;
 
-	if((ourport->dma) && (port->fifosize<64))
+	if ((ourport->dma) && (port->fifosize < 64))
 		max_count = 64;
 
 	while (max_count-- > 0) {
@@ -1138,7 +1142,7 @@ static int s3c64xx_serial_startup(struct uart_port *port)
 
 	ufcon = rd_regl(port, S3C2410_UFCON);
 	ufcon &= ~S5PV210_UFCON_RXTRIG64;
-	
+
 	if (port->line > 2)
 		ufcon |= S5PV210_UFCON_RXTRIG8;
 	else
@@ -1540,7 +1544,7 @@ static int __init s3c24xx_serial_console_init(void)
 }
 console_initcall(s3c24xx_serial_console_init);
 
-#define S3C24XX_SERIAL_CONSOLE &s3c24xx_serial_console
+#define S3C24XX_SERIAL_CONSOLE (&s3c24xx_serial_console)
 #else
 #define S3C24XX_SERIAL_CONSOLE NULL
 #endif
@@ -1908,6 +1912,7 @@ static inline struct s3c24xx_serial_drv_data *s3c24xx_get_driver_data(
 #ifdef CONFIG_OF
 	if (pdev->dev.of_node) {
 		const struct of_device_id *match;
+
 		match = of_match_node(s3c24xx_uart_dt_match, pdev->dev.of_node);
 		return (struct s3c24xx_serial_drv_data *)match->data;
 	}
@@ -2081,6 +2086,7 @@ static int s3c24xx_serial_resume_noirq(struct device *dev)
 		/* restore IRQ mask */
 		if (s3c24xx_serial_has_interrupt_mask(port)) {
 			unsigned int uintm = 0xf;
+
 			if (tx_enabled(port))
 				uintm &= ~S3C64XX_UINTM_TXD_MSK;
 			if (rx_enabled(port))
@@ -2340,7 +2346,7 @@ static struct s3c24xx_serial_drv_data s3c2410_serial_drv_data = {
 };
 #define S3C2410_SERIAL_DRV_DATA ((kernel_ulong_t)&s3c2410_serial_drv_data)
 #else
-#define S3C2410_SERIAL_DRV_DATA (kernel_ulong_t)NULL
+#define S3C2410_SERIAL_DRV_DATA ((kernel_ulong_t)NULL)
 #endif
 
 #ifdef CONFIG_CPU_S3C2412
@@ -2368,7 +2374,7 @@ static struct s3c24xx_serial_drv_data s3c2412_serial_drv_data = {
 };
 #define S3C2412_SERIAL_DRV_DATA ((kernel_ulong_t)&s3c2412_serial_drv_data)
 #else
-#define S3C2412_SERIAL_DRV_DATA (kernel_ulong_t)NULL
+#define S3C2412_SERIAL_DRV_DATA ((kernel_ulong_t)NULL)
 #endif
 
 #if defined(CONFIG_CPU_S3C2440) || defined(CONFIG_CPU_S3C2416) || \
@@ -2397,7 +2403,7 @@ static struct s3c24xx_serial_drv_data s3c2440_serial_drv_data = {
 };
 #define S3C2440_SERIAL_DRV_DATA ((kernel_ulong_t)&s3c2440_serial_drv_data)
 #else
-#define S3C2440_SERIAL_DRV_DATA (kernel_ulong_t)NULL
+#define S3C2440_SERIAL_DRV_DATA ((kernel_ulong_t)NULL)
 #endif
 
 #if defined(CONFIG_CPU_S3C6400) || defined(CONFIG_CPU_S3C6410)
@@ -2425,7 +2431,7 @@ static struct s3c24xx_serial_drv_data s3c6400_serial_drv_data = {
 };
 #define S3C6400_SERIAL_DRV_DATA ((kernel_ulong_t)&s3c6400_serial_drv_data)
 #else
-#define S3C6400_SERIAL_DRV_DATA (kernel_ulong_t)NULL
+#define S3C6400_SERIAL_DRV_DATA ((kernel_ulong_t)NULL)
 #endif
 
 #ifdef CONFIG_CPU_S5PV210
@@ -2453,7 +2459,7 @@ static struct s3c24xx_serial_drv_data s5pv210_serial_drv_data = {
 };
 #define S5PV210_SERIAL_DRV_DATA ((kernel_ulong_t)&s5pv210_serial_drv_data)
 #else
-#define S5PV210_SERIAL_DRV_DATA	(kernel_ulong_t)NULL
+#define S5PV210_SERIAL_DRV_DATA	((kernel_ulong_t)NULL)
 #endif
 
 #if defined(CONFIG_ARCH_EXYNOS)
@@ -2492,8 +2498,8 @@ static struct s3c24xx_serial_drv_data exynos5433_serial_drv_data = {
 #define EXYNOS4210_SERIAL_DRV_DATA ((kernel_ulong_t)&exynos4210_serial_drv_data)
 #define EXYNOS5433_SERIAL_DRV_DATA ((kernel_ulong_t)&exynos5433_serial_drv_data)
 #else
-#define EXYNOS4210_SERIAL_DRV_DATA (kernel_ulong_t)NULL
-#define EXYNOS5433_SERIAL_DRV_DATA (kernel_ulong_t)NULL
+#define EXYNOS4210_SERIAL_DRV_DATA ((kernel_ulong_t)NULL)
+#define EXYNOS5433_SERIAL_DRV_DATA ((kernel_ulong_t)NULL)
 #endif
 
 #if defined(CONFIG_ARCH_S5P6818)
@@ -2523,7 +2529,7 @@ static struct s3c24xx_serial_drv_data nexell_serial_drv_data = {
 };
 #define NEXELL_SERIAL_DRV_DATA	   ((kernel_ulong_t)&nexell_serial_drv_data)
 #else
-#define NEXELL_SERIAL_DRV_DATA	   (kernel_ulong_t)NULL
+#define NEXELL_SERIAL_DRV_DATA	   ((kernel_ulong_t)NULL)
 #endif
 
 static const struct platform_device_id s3c24xx_serial_driver_ids[] = {
