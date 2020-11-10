@@ -596,9 +596,10 @@ static void enable_rx_pio(struct s3c24xx_uart_port *ourport)
 	struct uart_port *port = &ourport->port;
 	unsigned int ucon;
 
-	/* set Rx mode to DMA mode */
+	/* set Rx mode to PIO mode */
 	ucon = rd_regl(port, S3C2410_UCON);
-	ucon &= ~(S3C64XX_UCON_TIMEOUT_MASK |
+	ucon &= ~(S3C64XX_UCON_RXBURST_MASK|
+			S3C64XX_UCON_TIMEOUT_MASK |
 			S3C64XX_UCON_EMPTYINT_EN |
 			S3C64XX_UCON_DMASUS_EN |
 			S3C64XX_UCON_TIMEOUT_EN |
@@ -665,14 +666,26 @@ static void s3c24xx_serial_rx_drain_fifo(struct s3c24xx_uart_port *ourport)
 {
 	struct uart_port *port = &ourport->port;
 	unsigned int ufcon, ch, flag, ufstat, uerstat;
+	unsigned int fifocnt = 0;
 	int max_count = port->fifosize;
 
-	while (max_count-- > 0) {
-		ufcon = rd_regl(port, S3C2410_UFCON);
-		ufstat = rd_regl(port, S3C2410_UFSTAT);
+	if((ourport->dma) && (port->fifosize<64))
+		max_count = 64;
 
-		if (s3c24xx_serial_rx_fifocnt(ourport, ufstat) == 0)
-			break;
+	while (max_count-- > 0) {
+		/*
+		 * Receive all characters known to be in FIFO
+		 * before reading FIFO level again
+		 */
+		if (fifocnt == 0) {
+			ufstat = rd_regl(port, S3C2410_UFSTAT);
+			fifocnt = s3c24xx_serial_rx_fifocnt(ourport, ufstat);
+
+			if (fifocnt == 0)
+				break;
+		}
+
+		fifocnt--;
 
 		uerstat = rd_regl(port, S3C2410_UERSTAT);
 		ch = rd_regb(port, S3C2410_URXH);
@@ -687,6 +700,7 @@ static void s3c24xx_serial_rx_drain_fifo(struct s3c24xx_uart_port *ourport)
 				}
 			} else {
 				if (txe) {
+					ufcon = rd_regl(port, S3C2410_UFCON);
 					ufcon |= S3C2410_UFCON_RESETRX;
 					wr_regl(port, S3C2410_UFCON, ufcon);
 					rx_enabled(port) = 1;
@@ -751,7 +765,6 @@ static irqreturn_t s3c24xx_serial_rx_chars_pio(void *dev_id)
 
 	return IRQ_HANDLED;
 }
-
 
 static irqreturn_t s3c24xx_serial_rx_chars(int irq, void *dev_id)
 {
@@ -1082,8 +1095,8 @@ static int s3c24xx_serial_startup(struct uart_port *port)
 	dbg("s3c24xx_serial_startup ok\n");
 
 	/* the port reset code should have done the correct
-	 * register setup for the port controls */
-
+	 * register setup for the port controls
+	 */
 	return ret;
 
 err:
@@ -1324,6 +1337,7 @@ static void s3c24xx_serial_set_termios(struct uart_port *port,
 	unsigned int baud, quot, clk_sel = 0;
 	unsigned int ulcon;
 	unsigned int umcon;
+	unsigned int div;
 	unsigned int udivslot = 0;
 
 	/*
@@ -1360,7 +1374,7 @@ static void s3c24xx_serial_set_termios(struct uart_port *port,
 	}
 
 	if (ourport->info->has_divslot) {
-		unsigned int div = ourport->baudclk_rate / baud;
+		div = ourport->baudclk_rate / baud;
 
 		if (cfg->has_fracval) {
 			udivslot = (div & 15);
@@ -1488,6 +1502,7 @@ static void s3c24xx_serial_release_port(struct uart_port *port)
 static int s3c24xx_serial_request_port(struct uart_port *port)
 {
 	const char *name = s3c24xx_serial_portname(port);
+
 	return request_mem_region(port->mapbase, MAP_SIZE, name) ? 0 : -EBUSY;
 }
 
@@ -1710,7 +1725,8 @@ static int s3c24xx_serial_cpufreq_transition(struct notifier_block *nb,
 
 	if (val == CPUFREQ_PRECHANGE) {
 		/* we should really shut the port down whilst the
-		 * frequency change is in progress. */
+		 * frequency change is in progress.
+		 */
 
 	} else if (val == CPUFREQ_POSTCHANGE) {
 		struct ktermios *termios;
@@ -2504,7 +2520,7 @@ static struct s3c24xx_serial_drv_data nexell_serial_drv_data = {
 		.ufcon		= S5PV210_UFCON_DEFAULT,
 		.has_fracval	= 1,
 	},
-	.fifosize = { 64, 64, 16, 16, 16, 16 },
+	.fifosize = { 64, 64, 64, 16, 16, 16 },
 };
 #define NEXELL_SERIAL_DRV_DATA	   ((kernel_ulong_t)&nexell_serial_drv_data)
 #else
