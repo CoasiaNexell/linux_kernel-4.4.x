@@ -77,6 +77,7 @@ struct s3c24xx_uart_dma {
 
 	int				tx_bytes_requested;
 	int				rx_bytes_requested;
+	unsigned char	prepared;
 };
 
 struct s3c24xx_uart_port {
