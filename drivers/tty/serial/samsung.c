@@ -199,7 +199,54 @@ static void s3c24xx_serial_stop_tx(struct uart_port *port)
 	ourport->tx_mode = 0;
 }
 
+static void s3c24xx_serial_start_tx(struct uart_port *port);
 static void s3c24xx_serial_start_next_tx(struct s3c24xx_uart_port *ourport);
+
+static void s3c64xx_serial_dma_fsm_reset(struct uart_port *port)
+{
+	struct s3c24xx_uart_port *ourport = to_ourport(port);
+	struct circ_buf *xmit = &port->state->xmit;
+	unsigned long flags;
+	unsigned int ucon, utrstat;
+
+	if (ourport->dma) {
+		utrstat = rd_regl(port, S3C2410_UTRSTAT);
+		utrstat >>= 16;
+
+		if ((xmit->buf) && (utrstat)) {
+			memset(xmit->buf, 0x00, (UART_XMIT_SIZE - 1));
+
+			spin_lock_irqsave(&port->lock, flags);
+
+			ucon = rd_regl(port, S3C2410_UCON);
+			ucon |= S3C2443_UCON_LOOPBACK;
+			wr_regl(port, S3C2410_UCON, ucon);
+
+			xmit->head = UART_XMIT_SIZE>>5;
+			xmit->tail = 0;
+			s3c24xx_serial_start_tx(port);
+			ourport->dma->prepared = 0;
+
+			spin_unlock_irqrestore(&port->lock, flags);
+		}
+	}	
+}
+
+static void s3c24xx_serial_dma_prepare_done(struct s3c24xx_uart_port *ourport)
+{
+	struct uart_port *port = &ourport->port;
+	struct circ_buf *xmit = &port->state->xmit;
+	unsigned int ucon;
+
+	ucon = rd_regl(port, S3C2410_UCON);
+
+	if (ucon&S3C2443_UCON_LOOPBACK)	{
+		ucon &= ~S3C2443_UCON_LOOPBACK;
+		wr_regl(port, S3C2410_UCON, ucon);
+		xmit->head = xmit->tail = 0;
+		ourport->dma->prepared = 1;
+	}
+}
 
 static void s3c24xx_serial_tx_dma_complete(void *args)
 {
@@ -210,7 +257,6 @@ static void s3c24xx_serial_tx_dma_complete(void *args)
 	struct dma_tx_state state;
 	unsigned long flags;
 	int count;
-
 
 	dmaengine_tx_status(dma->tx_chan, dma->tx_cookie, &state);
 	count = dma->tx_bytes_requested - state.residue;
@@ -227,6 +273,10 @@ static void s3c24xx_serial_tx_dma_complete(void *args)
 
 	if (uart_circ_chars_pending(xmit) < WAKEUP_CHARS)
 		uart_write_wakeup(port);
+
+	if ((ourport->dma) && !(ourport->dma->prepared)) {
+		s3c24xx_serial_dma_prepare_done(ourport);
+	}
 
 	s3c24xx_serial_start_next_tx(ourport);
 	spin_unlock_irqrestore(&port->lock, flags);
@@ -546,9 +596,10 @@ static void enable_rx_pio(struct s3c24xx_uart_port *ourport)
 	struct uart_port *port = &ourport->port;
 	unsigned int ucon;
 
-	/* set Rx mode to DMA mode */
+	/* set Rx mode to PIO mode */
 	ucon = rd_regl(port, S3C2410_UCON);
-	ucon &= ~(S3C64XX_UCON_TIMEOUT_MASK |
+	ucon &= ~(S3C64XX_UCON_RXBURST_MASK|
+			S3C64XX_UCON_TIMEOUT_MASK |
 			S3C64XX_UCON_EMPTYINT_EN |
 			S3C64XX_UCON_DMASUS_EN |
 			S3C64XX_UCON_TIMEOUT_EN |
@@ -565,17 +616,16 @@ static void s3c24xx_serial_rx_drain_fifo(struct s3c24xx_uart_port *ourport);
 
 static irqreturn_t s3c24xx_serial_rx_chars_dma(void *dev_id)
 {
-	unsigned int utrstat, ufstat, received;
 	struct s3c24xx_uart_port *ourport = dev_id;
 	struct uart_port *port = &ourport->port;
 	struct s3c24xx_uart_dma *dma = ourport->dma;
+	struct dma_tx_state state;
 	struct tty_struct *tty = tty_port_tty_get(&ourport->port.state->port);
 	struct tty_port *t = &port->state->port;
 	unsigned long flags;
-	struct dma_tx_state state;
+	unsigned int utrstat, received = 0;
 
 	utrstat = rd_regl(port, S3C2410_UTRSTAT);
-	ufstat = rd_regl(port, S3C2410_UFSTAT);
 
 	spin_lock_irqsave(&port->lock, flags);
 
@@ -701,7 +751,6 @@ static irqreturn_t s3c24xx_serial_rx_chars_pio(void *dev_id)
 
 	return IRQ_HANDLED;
 }
-
 
 static irqreturn_t s3c24xx_serial_rx_chars(int irq, void *dev_id)
 {
@@ -1015,8 +1064,6 @@ static int s3c24xx_serial_startup(struct uart_port *port)
 
 	ourport->rx_claimed = 1;
 
-	dbg("requesting tx irq...\n");
-
 	tx_enabled(port) = 1;
 
 	ret = request_irq(ourport->tx_irq, s3c24xx_serial_tx_chars, 0,
@@ -1029,11 +1076,9 @@ static int s3c24xx_serial_startup(struct uart_port *port)
 
 	ourport->tx_claimed = 1;
 
-	dbg("s3c24xx_serial_startup ok\n");
-
 	/* the port reset code should have done the correct
-	 * register setup for the port controls */
-
+	 * register setup for the port controls
+	 */
 	return ret;
 
 err:
@@ -1048,8 +1093,7 @@ static int s3c64xx_serial_startup(struct uart_port *port)
 	unsigned int ufcon;
 	int ret;
 
-	dbg("s3c64xx_serial_startup: port=%p (%08llx,%p)\n",
-	    port, (unsigned long long)port->mapbase, port->membase);
+	dbg("UART%d:(%s):\n", port->line, __func__);
 
 	wr_regl(port, S3C64XX_UINTM, 0xf);
 	if (ourport->dma) {
@@ -1090,7 +1134,8 @@ static int s3c64xx_serial_startup(struct uart_port *port)
 	/* Enable Rx Interrupt */
 	__clear_bit(S3C64XX_UINTM_RXD, portaddrl(port, S3C64XX_UINTM));
 
-	dbg("s3c64xx_serial_startup ok\n");
+	s3c64xx_serial_dma_fsm_reset(port);
+
 	return ret;
 }
 
@@ -1273,6 +1318,7 @@ static void s3c24xx_serial_set_termios(struct uart_port *port,
 	unsigned int baud, quot, clk_sel = 0;
 	unsigned int ulcon;
 	unsigned int umcon;
+	unsigned int div;
 	unsigned int udivslot = 0;
 
 	/*
@@ -1309,7 +1355,7 @@ static void s3c24xx_serial_set_termios(struct uart_port *port,
 	}
 
 	if (ourport->info->has_divslot) {
-		unsigned int div = ourport->baudclk_rate / baud;
+		div = ourport->baudclk_rate / baud;
 
 		if (cfg->has_fracval) {
 			udivslot = (div & 15);
@@ -1437,6 +1483,7 @@ static void s3c24xx_serial_release_port(struct uart_port *port)
 static int s3c24xx_serial_request_port(struct uart_port *port)
 {
 	const char *name = s3c24xx_serial_portname(port);
+
 	return request_mem_region(port->mapbase, MAP_SIZE, name) ? 0 : -EBUSY;
 }
 
@@ -1475,7 +1522,7 @@ static int __init s3c24xx_serial_console_init(void)
 }
 console_initcall(s3c24xx_serial_console_init);
 
-#define S3C24XX_SERIAL_CONSOLE &s3c24xx_serial_console
+#define S3C24XX_SERIAL_CONSOLE (&s3c24xx_serial_console)
 #else
 #define S3C24XX_SERIAL_CONSOLE NULL
 #endif
@@ -1659,7 +1706,8 @@ static int s3c24xx_serial_cpufreq_transition(struct notifier_block *nb,
 
 	if (val == CPUFREQ_PRECHANGE) {
 		/* we should really shut the port down whilst the
-		 * frequency change is in progress. */
+		 * frequency change is in progress.
+		 */
 
 	} else if (val == CPUFREQ_POSTCHANGE) {
 		struct ktermios *termios;
@@ -1842,6 +1890,7 @@ static inline struct s3c24xx_serial_drv_data *s3c24xx_get_driver_data(
 #ifdef CONFIG_OF
 	if (pdev->dev.of_node) {
 		const struct of_device_id *match;
+
 		match = of_match_node(s3c24xx_uart_dt_match, pdev->dev.of_node);
 		return (struct s3c24xx_serial_drv_data *)match->data;
 	}
@@ -2015,6 +2064,7 @@ static int s3c24xx_serial_resume_noirq(struct device *dev)
 		/* restore IRQ mask */
 		if (s3c24xx_serial_has_interrupt_mask(port)) {
 			unsigned int uintm = 0xf;
+
 			if (tx_enabled(port))
 				uintm &= ~S3C64XX_UINTM_TXD_MSK;
 			if (rx_enabled(port))
@@ -2274,7 +2324,7 @@ static struct s3c24xx_serial_drv_data s3c2410_serial_drv_data = {
 };
 #define S3C2410_SERIAL_DRV_DATA ((kernel_ulong_t)&s3c2410_serial_drv_data)
 #else
-#define S3C2410_SERIAL_DRV_DATA (kernel_ulong_t)NULL
+#define S3C2410_SERIAL_DRV_DATA ((kernel_ulong_t)NULL)
 #endif
 
 #ifdef CONFIG_CPU_S3C2412
@@ -2302,7 +2352,7 @@ static struct s3c24xx_serial_drv_data s3c2412_serial_drv_data = {
 };
 #define S3C2412_SERIAL_DRV_DATA ((kernel_ulong_t)&s3c2412_serial_drv_data)
 #else
-#define S3C2412_SERIAL_DRV_DATA (kernel_ulong_t)NULL
+#define S3C2412_SERIAL_DRV_DATA ((kernel_ulong_t)NULL)
 #endif
 
 #if defined(CONFIG_CPU_S3C2440) || defined(CONFIG_CPU_S3C2416) || \
@@ -2331,7 +2381,7 @@ static struct s3c24xx_serial_drv_data s3c2440_serial_drv_data = {
 };
 #define S3C2440_SERIAL_DRV_DATA ((kernel_ulong_t)&s3c2440_serial_drv_data)
 #else
-#define S3C2440_SERIAL_DRV_DATA (kernel_ulong_t)NULL
+#define S3C2440_SERIAL_DRV_DATA ((kernel_ulong_t)NULL)
 #endif
 
 #if defined(CONFIG_CPU_S3C6400) || defined(CONFIG_CPU_S3C6410)
@@ -2359,7 +2409,7 @@ static struct s3c24xx_serial_drv_data s3c6400_serial_drv_data = {
 };
 #define S3C6400_SERIAL_DRV_DATA ((kernel_ulong_t)&s3c6400_serial_drv_data)
 #else
-#define S3C6400_SERIAL_DRV_DATA (kernel_ulong_t)NULL
+#define S3C6400_SERIAL_DRV_DATA ((kernel_ulong_t)NULL)
 #endif
 
 #ifdef CONFIG_CPU_S5PV210
@@ -2387,7 +2437,7 @@ static struct s3c24xx_serial_drv_data s5pv210_serial_drv_data = {
 };
 #define S5PV210_SERIAL_DRV_DATA ((kernel_ulong_t)&s5pv210_serial_drv_data)
 #else
-#define S5PV210_SERIAL_DRV_DATA	(kernel_ulong_t)NULL
+#define S5PV210_SERIAL_DRV_DATA	((kernel_ulong_t)NULL)
 #endif
 
 #if defined(CONFIG_ARCH_EXYNOS)
@@ -2426,8 +2476,8 @@ static struct s3c24xx_serial_drv_data exynos5433_serial_drv_data = {
 #define EXYNOS4210_SERIAL_DRV_DATA ((kernel_ulong_t)&exynos4210_serial_drv_data)
 #define EXYNOS5433_SERIAL_DRV_DATA ((kernel_ulong_t)&exynos5433_serial_drv_data)
 #else
-#define EXYNOS4210_SERIAL_DRV_DATA (kernel_ulong_t)NULL
-#define EXYNOS5433_SERIAL_DRV_DATA (kernel_ulong_t)NULL
+#define EXYNOS4210_SERIAL_DRV_DATA ((kernel_ulong_t)NULL)
+#define EXYNOS5433_SERIAL_DRV_DATA ((kernel_ulong_t)NULL)
 #endif
 
 #if defined(CONFIG_ARCH_S5P6818)
@@ -2453,11 +2503,11 @@ static struct s3c24xx_serial_drv_data nexell_serial_drv_data = {
 		.ufcon		= S5PV210_UFCON_DEFAULT,
 		.has_fracval	= 1,
 	},
-	.fifosize = { 64, 64, 16, 16, 16, 16 },
+	.fifosize = { 64, 64, 64, 16, 16, 16 },
 };
 #define NEXELL_SERIAL_DRV_DATA	   ((kernel_ulong_t)&nexell_serial_drv_data)
 #else
-#define NEXELL_SERIAL_DRV_DATA	   (kernel_ulong_t)NULL
+#define NEXELL_SERIAL_DRV_DATA	   ((kernel_ulong_t)NULL)
 #endif
 
 static const struct platform_device_id s3c24xx_serial_driver_ids[] = {
