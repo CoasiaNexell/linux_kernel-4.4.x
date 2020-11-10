@@ -199,7 +199,54 @@ static void s3c24xx_serial_stop_tx(struct uart_port *port)
 	ourport->tx_mode = 0;
 }
 
+static void s3c24xx_serial_start_tx(struct uart_port *port);
 static void s3c24xx_serial_start_next_tx(struct s3c24xx_uart_port *ourport);
+
+static void s3c64xx_serial_dma_fsm_reset(struct uart_port *port)
+{
+	struct s3c24xx_uart_port *ourport = to_ourport(port);
+	struct circ_buf *xmit = &port->state->xmit;
+	unsigned long flags;
+	unsigned int ucon, utrstat;
+
+	if (ourport->dma) {
+		utrstat = rd_regl(port, S3C2410_UTRSTAT);
+		utrstat >>= 16;
+
+		if ((xmit->buf) && (utrstat)) {
+			memset(xmit->buf, 0x00, (UART_XMIT_SIZE - 1));
+
+			spin_lock_irqsave(&port->lock, flags);
+
+			ucon = rd_regl(port, S3C2410_UCON);
+			ucon |= S3C2443_UCON_LOOPBACK;
+			wr_regl(port, S3C2410_UCON, ucon);
+
+			xmit->head = UART_XMIT_SIZE>>5;
+			xmit->tail = 0;
+			s3c24xx_serial_start_tx(port);
+			ourport->dma->prepared = 0;
+
+			spin_unlock_irqrestore(&port->lock, flags);
+		}
+	}	
+}
+
+static void s3c24xx_serial_dma_prepare_done(struct s3c24xx_uart_port *ourport)
+{
+	struct uart_port *port = &ourport->port;
+	struct circ_buf *xmit = &port->state->xmit;
+	unsigned int ucon;
+
+	ucon = rd_regl(port, S3C2410_UCON);
+
+	if (ucon&S3C2443_UCON_LOOPBACK)	{
+		ucon &= ~S3C2443_UCON_LOOPBACK;
+		wr_regl(port, S3C2410_UCON, ucon);
+		xmit->head = xmit->tail = 0;
+		ourport->dma->prepared = 1;
+	}
+}
 
 static void s3c24xx_serial_tx_dma_complete(void *args)
 {
@@ -210,7 +257,6 @@ static void s3c24xx_serial_tx_dma_complete(void *args)
 	struct dma_tx_state state;
 	unsigned long flags;
 	int count;
-
 
 	dmaengine_tx_status(dma->tx_chan, dma->tx_cookie, &state);
 	count = dma->tx_bytes_requested - state.residue;
@@ -227,6 +273,10 @@ static void s3c24xx_serial_tx_dma_complete(void *args)
 
 	if (uart_circ_chars_pending(xmit) < WAKEUP_CHARS)
 		uart_write_wakeup(port);
+
+	if ((ourport->dma) && !(ourport->dma->prepared)) {
+		s3c24xx_serial_dma_prepare_done(ourport);
+	}
 
 	s3c24xx_serial_start_next_tx(ourport);
 	spin_unlock_irqrestore(&port->lock, flags);
@@ -1090,7 +1140,8 @@ static int s3c64xx_serial_startup(struct uart_port *port)
 	/* Enable Rx Interrupt */
 	__clear_bit(S3C64XX_UINTM_RXD, portaddrl(port, S3C64XX_UINTM));
 
-	dbg("s3c64xx_serial_startup ok\n");
+	s3c64xx_serial_dma_fsm_reset(port);
+
 	return ret;
 }
 
