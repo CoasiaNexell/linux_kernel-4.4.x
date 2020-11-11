@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ab0fd39_590d0814",
+        "filename": "drivers/tty/serial/samsung.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1000009
+      },
+      "writtenOn": "2020-11-11T04:01:03Z",
+      "side": 1,
+      "message": "please remove blank tap",
+      "range": {
+        "startLine": 232,
+        "startChar": 2,
+        "endLine": 232,
+        "endChar": 3
+      },
+      "revId": "686a812108d739ef48bd0a82856751bb1407d4ed",
+      "serverId": "f3c90331-7953-4206-aadc-b7348badd027",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7de69d9_282f3e83",
+        "filename": "drivers/tty/serial/samsung.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1000009
+      },
+      "writtenOn": "2020-11-11T04:01:03Z",
+      "side": 1,
+      "message": "braces {} are not necessary for single statement blocks",
+      "range": {
+        "startLine": 277,
+        "startChar": 50,
+        "endLine": 277,
+        "endChar": 51
+      },
+      "revId": "686a812108d739ef48bd0a82856751bb1407d4ed",
+      "serverId": "f3c90331-7953-4206-aadc-b7348badd027",
+      "unresolved": true
+    }
+  ]
+}
