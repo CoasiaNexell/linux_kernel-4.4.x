@@ -22,6 +22,30 @@
       "revId": "d06e9972770cb0792b1b5af6fd301d0d97221c00",
       "serverId": "f3c90331-7953-4206-aadc-b7348badd027",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "206fa7b7_a51f25e2",
+        "filename": "drivers/tty/serial/samsung.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1142,
+      "author": {
+        "id": 1000009
+      },
+      "writtenOn": "2020-11-12T02:38:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8a46691f_6e72a79b",
+      "range": {
+        "startLine": 1142,
+        "startChar": 0,
+        "endLine": 1142,
+        "endChar": 1
+      },
+      "revId": "d06e9972770cb0792b1b5af6fd301d0d97221c00",
+      "serverId": "f3c90331-7953-4206-aadc-b7348badd027",
+      "unresolved": false
     }
   ]
 }
