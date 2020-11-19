@@ -564,8 +564,12 @@
 			    "pwm-tclk2", "pwm-tclk3";
 			clocks =  <&pclk>, <&pwm0>, <&pwm1>, <&pwm2>, <&pwm3>;
 			#pwm-cells = <3>;
-			pinctrl-names = "default";
-			pinctrl-0 = <&pwm0_pin &pwm1_pin &pwm2_pin &pwm3_pin>;
+			pinctrl-names = "pwm0_dft", "pwm1_dft",
+			                "pwm2_dft", "pwm3_dft";
+			pinctrl-0 = <&pwm0_pin>;
+			pinctrl-1 = <&pwm1_pin>;
+			pinctrl-2 = <&pwm2_pin>;
+			pinctrl-3 = <&pwm3_pin>;
 			samsung,pwm-outputs = <0>, <1>, <2>, <3>;
 			status = "disabled";
 		};
