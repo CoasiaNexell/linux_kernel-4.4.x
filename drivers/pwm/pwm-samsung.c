@@ -477,6 +477,7 @@ static int pwm_samsung_config(struct pwm_chip *chip, struct pwm_device *pwm,
 	u32 tin_ns = chan->tin_ns, tcnt, tcmp, oldtcmp;
 	unsigned long tin_rate;
 	u64 correction;
+	int recal_duty_ns;
 
 	/*
 	 * We currently avoid using 64bit arithmetic by using the
@@ -518,7 +519,10 @@ static int pwm_samsung_config(struct pwm_chip *chip, struct pwm_device *pwm,
 		return -ERANGE;
 
 	/* Note that counters count down. */
-	correction = div64_u64((uint64_t)tin_rate * duty_ns, NSEC_PER_SEC);
+	recal_duty_ns = period_ns - duty_ns;
+	correction = div64_u64((uint64_t)tin_rate * recal_duty_ns,
+							NSEC_PER_SEC);
+
 	tcmp = (u32)correction;
 
 	/* 0% duty is not available */
@@ -585,7 +589,7 @@ static int pwm_samsung_set_polarity(struct pwm_chip *chip,
 				    enum pwm_polarity polarity)
 {
 	struct samsung_pwm_chip *our_chip = to_samsung_pwm_chip(chip);
-	bool invert = (polarity == PWM_POLARITY_NORMAL);
+	bool invert = (polarity?PWM_POLARITY_INVERSED:PWM_POLARITY_NORMAL);
 
 	/* Inverted means normal in the hardware. */
 	pwm_samsung_set_invert(our_chip, pwm->hwpwm, invert);
@@ -789,14 +793,6 @@ static int pwm_samsung_probe(struct platform_device *pdev)
 			reset_control_reset(rst);
 	}
 #endif
-	/*
-         * move for s5p6818
-	 * TCON register value faded away by reset controller
-	 * So, invert setup moved after reset
-	 */
-	for (chan = 0; chan < SAMSUNG_PWM_NUM; ++chan)
-		if (chip->variant.output_mask & BIT(chan))
-			pwm_samsung_set_invert(chip, chan, true);
 
 	platform_set_drvdata(pdev, chip);
 
