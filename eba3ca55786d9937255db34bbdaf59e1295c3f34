@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a2c6c85e_6ab00128",
+        "filename": "arch/arm/boot/dts/s5p4418.dtsi",
+        "patchSetId": 1
+      },
+      "lineNbr": 568,
+      "author": {
+        "id": 1000009
+      },
+      "writtenOn": "2020-11-20T03:40:19Z",
+      "side": 1,
+      "message": "Please arrange the line",
+      "range": {
+        "startLine": 567,
+        "startChar": 3,
+        "endLine": 568,
+        "endChar": 31
+      },
+      "revId": "eba3ca55786d9937255db34bbdaf59e1295c3f34",
+      "serverId": "f3c90331-7953-4206-aadc-b7348badd027",
+      "unresolved": true
+    }
+  ]
+}
