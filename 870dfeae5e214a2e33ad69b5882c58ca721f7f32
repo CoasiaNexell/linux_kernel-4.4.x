@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7f1eaf4_05e3dd91",
+        "filename": "drivers/pwm/pwm-samsung.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1000009
+      },
+      "writtenOn": "2020-11-23T01:20:09Z",
+      "side": 1,
+      "message": "insert space each seperate\n-\u003e bool invert \u003d (polarity ? PWM_POLARITY_INVERSED : PWM_POLARITY_NORMAL);",
+      "range": {
+        "startLine": 592,
+        "startChar": 1,
+        "endLine": 592,
+        "endChar": 68
+      },
+      "revId": "870dfeae5e214a2e33ad69b5882c58ca721f7f32",
+      "serverId": "f3c90331-7953-4206-aadc-b7348badd027",
+      "unresolved": true
+    }
+  ]
+}
