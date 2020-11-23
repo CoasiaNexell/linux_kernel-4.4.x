@@ -22,6 +22,30 @@
       "revId": "4427aabf00354b156b31621ead4a716049041b9c",
       "serverId": "f3c90331-7953-4206-aadc-b7348badd027",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "055ffbe0_d2673d50",
+        "filename": "drivers/pwm/pwm-samsung.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1000009
+      },
+      "writtenOn": "2020-11-23T04:56:28Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0c77e31d_74976e00",
+      "range": {
+        "startLine": 592,
+        "startChar": 1,
+        "endLine": 592,
+        "endChar": 68
+      },
+      "revId": "4427aabf00354b156b31621ead4a716049041b9c",
+      "serverId": "f3c90331-7953-4206-aadc-b7348badd027",
+      "unresolved": false
     }
   ]
 }
