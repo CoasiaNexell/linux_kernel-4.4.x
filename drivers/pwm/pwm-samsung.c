@@ -104,6 +104,9 @@ struct samsung_pwm_chip {
 	u32 tcntb[SAMSUNG_PWM_NUM];
 	u32 tcmpb[SAMSUNG_PWM_NUM];
 	u32 is_enabled;
+	struct pinctrl *pctrl;
+	struct pinctrl_state *pins_pwm_dft[SAMSUNG_PWM_NUM];
+	char *pin_name[SAMSUNG_PWM_NUM];
 };
 
 #ifndef CONFIG_CLKSRC_SAMSUNG_PWM
@@ -557,6 +560,15 @@ static int pwm_samsung_config(struct pwm_chip *chip, struct pwm_device *pwm,
 	chan->tin_ns = tin_ns;
 	chan->duty_ns = duty_ns;
 
+	if (of_device_is_compatible(our_chip->chip.dev->of_node,
+				    "nexell,s5p4418-pwm") ||
+	    of_device_is_compatible(our_chip->chip.dev->of_node,
+				    "nexell,s5p6818-pwm")) {
+		if (our_chip->pctrl && our_chip->pins_pwm_dft[pwm->hwpwm])
+			pinctrl_select_state(our_chip->pctrl,
+				our_chip->pins_pwm_dft[pwm->hwpwm]);
+	}
+
 	return 0;
 }
 
@@ -793,6 +805,16 @@ static int pwm_samsung_probe(struct platform_device *pdev)
 			reset_control_reset(rst);
 	}
 #endif
+	if (of_device_is_compatible(pdev->dev.of_node, "nexell,s5p4418-pwm") ||
+	    of_device_is_compatible(pdev->dev.of_node, "nexell,s5p6818-pwm")) {
+		chip->pctrl = devm_pinctrl_get(&pdev->dev);
+		for (chan = 0; chan < SAMSUNG_PWM_NUM; ++chan) {
+			snprintf(&chip->pin_name[chan], 10, "pwm%d_dft", chan);
+			chip->pins_pwm_dft[chan] =
+				pinctrl_lookup_state(chip->pctrl,
+							&chip->pin_name[chan]);
+		}
+	}
 
 	platform_set_drvdata(pdev, chip);
 
