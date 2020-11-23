@@ -208,8 +208,9 @@
 		pwm:pwm@c0018000 {
 			clock-names = "timers", "pwm-tclk0", "pwm-tclk3";
 			clocks =  <&pclk>, <&pwm0>, <&pwm3>;
-			pinctrl-names = "default";
-			pinctrl-0 = <&pwm0_pin &pwm3_pin>;
+			pinctrl-names = "pwm0_dft", "pwm3_dft";
+			pinctrl-0 = <&pwm0_pin>;
+			pinctrl-1 = <&pwm3_pin>;
 			samsung,pwm-outputs = <0>, <3>;
 			status = "okay";
 		};
