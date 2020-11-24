@@ -22,6 +22,30 @@
       "revId": "eba3ca55786d9937255db34bbdaf59e1295c3f34",
       "serverId": "f3c90331-7953-4206-aadc-b7348badd027",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc198178_d5849c3c",
+        "filename": "arch/arm/boot/dts/s5p4418.dtsi",
+        "patchSetId": 1
+      },
+      "lineNbr": 568,
+      "author": {
+        "id": 1000009
+      },
+      "writtenOn": "2020-11-24T03:25:36Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a2c6c85e_6ab00128",
+      "range": {
+        "startLine": 567,
+        "startChar": 3,
+        "endLine": 568,
+        "endChar": 31
+      },
+      "revId": "eba3ca55786d9937255db34bbdaf59e1295c3f34",
+      "serverId": "f3c90331-7953-4206-aadc-b7348badd027",
+      "unresolved": false
     }
   ]
 }
