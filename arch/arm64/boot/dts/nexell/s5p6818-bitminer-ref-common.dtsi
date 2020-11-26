@@ -187,6 +187,17 @@
 			status = "okay";
 		};
 
+		nexell_usbphy: nexell-usbphy@c0012000 {
+			deferred-probe;
+			status = "okay";
+		};
+
+		dwc2otg@c0040000 {
+			deferred-probe;
+			nouse_idcon = <1>;
+			status = "okay";
+		};
+
 		gmac0:ethernet@c0060000 {
 			pinctrl-names = "default";
 			pinctrl-0 = <&gmac_pins>;
