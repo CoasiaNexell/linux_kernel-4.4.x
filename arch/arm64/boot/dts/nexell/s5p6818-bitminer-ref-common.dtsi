@@ -364,7 +364,7 @@
 
 &spi_0 {
 	status = "okay";
-/*	cs-gpios = <&gpio_c 30 0>; */
+	cs-gpios = <&gpio_c 30 0>;
 	not-queued-transfer = <1>;
 	spidev@0 {
 		compatible = "linux,spidev";
@@ -379,7 +379,7 @@
 
 &spi_2 {
 	status = "okay";
-/*	cs-gpios = <&gpio_c 10 0>; */
+	cs-gpios = <&gpio_c 10 0>;
 	not-queued-transfer = <1>;
 	spidev@0 {
 		compatible = "linux,spidev";
