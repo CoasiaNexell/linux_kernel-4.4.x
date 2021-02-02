@@ -364,6 +364,7 @@
 
 &spi_0 {
 	status = "okay";
+	pinctrl-0 = <&spi0_bus>, <&hash0_resets>, <&hash0_irqs>;
 	cs-gpios = <&gpio_c 30 0>;
 	not-queued-transfer = <1>;
 	spidev@0 {
@@ -379,6 +380,7 @@
 
 &spi_2 {
 	status = "okay";
+	pinctrl-0 = <&spi2_bus>, <&hash1_resets>, <&hash1_irqs>;
 	cs-gpios = <&gpio_c 10 0>;
 	not-queued-transfer = <1>;
 	spidev@0 {

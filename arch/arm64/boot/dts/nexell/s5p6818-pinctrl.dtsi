@@ -425,6 +425,34 @@ pinctrl@C0010000 {
 		nexell,pin-strength = <NX_PIN_STR0>;
 	};
 
+	hash0_resets: hash0-resets {
+		nexell,pins = "gpiod-31";
+		nexell,pin-function = <NX_PIN_FUNC0>;
+		nexell,pin-pull = <NX_PIN_PULL_UP>;
+		nexell,pin-strength = <NX_PIN_STR3>;
+	};
+
+	hash0_irqs: hash0-irqs {
+		nexell,pins = "gpiod-30", "gpiod-29";
+		nexell,pin-function = <NX_PIN_FUNC0>;
+		nexell,pin-pull = <NX_PIN_PULL_UP>;
+		nexell,pin-strength = <NX_PIN_STR3>;
+	};
+
+	hash1_resets: hash1-resets {
+		nexell,pins = "gpioe-4";
+		nexell,pin-function = <NX_PIN_FUNC0>;
+		nexell,pin-pull = <NX_PIN_PULL_UP>;
+		nexell,pin-strength = <NX_PIN_STR3>;
+	};
+
+	hash1_irqs: hash1-irqs {
+		nexell,pins = "gpioe-3", "gpioe-2";
+		nexell,pin-function = <NX_PIN_FUNC0>;
+		nexell,pin-pull = <NX_PIN_PULL_UP>;
+		nexell,pin-strength = <NX_PIN_STR3>;
+	};
+
 	spdiftx_pin:spdiftx {
 		nexell,pins = "gpioc-25";
 		nexell,pin-function = <NX_PIN_FUNC2>;
