@@ -341,8 +341,8 @@
 					"nxe2000_ldo1",
 					1000000, 3500000,
 					/* TODO: Need to change VOUT1 value to 1.8V for ASIC */
-/*					1800000, 1, 1, 0x0) /* ASIC : 1.8V VOUT1 */
-					3300000, 1, 1, 0x0) /* FPGA : 3.3V VOUT1 */
+					1800000, 1, 1, 0x0) /* ASIC : 1.8V VOUT1 */
+/*					3300000, 1, 1, 0x0) /* FPGA : 3.3V VOUT1 */
 					regulator-always-on;
 					regulator-boot-on;};
 			VCC_LDO3:
