@@ -586,6 +586,22 @@
 		pinctrl-0 = <&bt_cfg_en>;
 		status = "okay";
 	};
+
+	firmware {
+		android {
+			compatible = "android,firmware";
+			fstab {
+				compatible = "android,fstab";
+				vendor {
+					compatible = "android,vendor";
+					dev = "/dev/block/platform/c0000000.soc/c0062000.dwmmc/by-name/vendor";
+					type = "ext4";
+					mnt_flags = "rw,barrier=1,inode_readahead_blks=8";
+					fsmgr_flags = "wait,slotselect";
+				};
+			};
+		};
+	};
 };
 
 &vip_0 {
