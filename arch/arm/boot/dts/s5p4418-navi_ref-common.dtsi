@@ -203,6 +203,18 @@
 			status = "okay";
 		};
 
+		i2s_2:i2s@c0057000 {
+			#sound-dai-cells = <1>;
+			master-mode = <0>;
+			mclk-in = <1>;
+			trans-mode = <0>;
+			frame-bit = <32>;
+			sample-rate = <16000>;
+			pre-supply-mclk = <0>;
+			dfs;
+			status = "okay";
+		};
+
 		pinctrl@C0010000 {
 			key_power:key_power {
 				nexell,pins = "alive-0";
@@ -419,9 +431,17 @@
 		status = "disabled";
 	};
 
+	snd_null: snd_null@10 {
+		#sound-dai-cells = <0>;
+		compatible = "nexell,snd-null";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0 0>;
+	};
+
 	sound {
-		compatible = "simple-audio-card";
-		simple-audio-card,name = "s5p4418 navi_ref Audio";
+		compatible = "nexell,simple-audio-card";
+		simple-audio-card,name = "s5p4418 navi_ref Audio Main";
 		simple-audio-card,mclk-fs = <256>;
 		simple-audio-card,widgets =
 		    "Headphone", "Out Jack",
@@ -447,11 +467,11 @@
 		simple-audio-card,dai-link@1 {
 		    format = "i2s";
 		    cpu {
-			sound-dai = <&i2s_1 0>;
+			sound-dai = <&i2s_2 0>;
 		    };
 
 		    codec {
-			sound-dai = <&alc5623>;
+			sound-dai = <&snd_null>;
 		    };
 		};
 
@@ -464,6 +484,34 @@
 		    codec {
 			sound-dai = <&spdif_out>;
 		    };
+		};
+	};
+
+	sound-sub {
+		compatible = "nexell,simple-audio-card";
+		simple-audio-card,name = "s5p4418 navi_ref Audio Sub";
+		simple-audio-card,mclk-fs = <256>;
+		simple-audio-card,widgets =
+			"Speaker", "Speaker Out",
+			"Microphone", "Mic Jack";
+		simple-audio-card,routing =
+			"Speaker Out", "SPKOUT",
+			"Speaker Out", "SPKOUTN",
+			"Speaker Out", "AUXOUTL",
+			"Speaker Out", "AUXOUTR",
+			"LINEINL", "Mic Jack",
+			"LINEINR", "Mic Jack";
+		status = "okay";
+
+		simple-audio-card,dai-link@0 {
+			format = "i2s";
+			cpu {
+				sound-dai = <&i2s_1 0>;
+			};
+
+			codec {
+				sound-dai = <&alc5623>;
+			};
 		};
 	};
 
