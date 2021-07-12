@@ -385,7 +385,7 @@ static ssize_t regulator_uV_store(struct device *dev,
 	return size;
 }
 
-static DEVICE_ATTR(microvolts, 0664, regulator_uV_show, regulator_uV_store);
+static DEVICE_ATTR(microvolts, 0644, regulator_uV_show, regulator_uV_store);
 
 static ssize_t regulator_uA_show(struct device *dev,
 				struct device_attribute *attr, char *buf)
@@ -1456,15 +1456,15 @@ static struct regulator_dev *regulator_dev_lookup(struct device *dev,
 				return r;
 			*ret = -EPROBE_DEFER;
 			return NULL;
+		} else {
+			/*
+			 * If we couldn't even get the node then it's
+			 * not just that the device didn't register
+			 * yet, there's no node and we'll never
+			 * succeed.
+			 */
+			*ret = -ENODEV;
 		}
-
-		/*
-		 * If we couldn't even get the node then it's
-		 * not just that the device didn't register
-		 * yet, there's no node and we'll never
-		 * succeed.
-		 */
-		*ret = -ENODEV;
 	}
 
 	/* if not found, try doing it non-dt way */
@@ -1965,8 +1965,9 @@ static void regulator_ena_gpio_free(struct regulator_dev *rdev)
 				kfree(pin);
 				rdev->ena_pin = NULL;
 				return;
+			} else {
+				pin->request_count--;
 			}
-			pin->request_count--;
 		}
 	}
 }
@@ -2804,11 +2805,11 @@ static int _regulator_do_set_voltage(struct regulator_dev *rdev,
 		ret = regulator_map_voltage(rdev, min_uV, max_uV);
 		if (ret >= 0) {
 			best_val = rdev->desc->ops->list_voltage(rdev, ret);
-#ifdef CONFIG_REGULATOR_MP8845C
-			if (min_uV <= best_val) {
-#else
-			if (min_uV <= best_val && max_uV >= best_val) {
+			if (min_uV <= best_val
+#if !defined(CONFIG_REGULATOR_MP8845C) && !defined(CONFIG_REGULATOR_AXP228)
+				&& max_uV >= best_val
 #endif
+				) {
 				selector = ret;
 				if (old_selector == selector)
 					ret = 0;
