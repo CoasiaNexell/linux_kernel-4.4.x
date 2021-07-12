@@ -1,21 +1,12 @@
 /*
- * axp228-regu.c  --  PMIC driver for the X-Powers AXP228
+ * Regulators driver for X-Powers AXP
  *
- * Copyright (C) 2016  Nexell Co., Ltd.
- * Author: Jongshin, Park <pjsin865@nexell.co.kr>
+ * Copyright (C) 2013 X-Powers, Ltd.
+ *  Zhang Donglu <zhangdonglu@x-powers.com>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
  */
 
 #include <linux/kernel.h>
@@ -290,44 +281,25 @@ static struct regulator_ops axp22_ldoio01_ops = {
 		nbits, ereg, ebit, vrc_ramp)
 
 static struct axp_regulator_info axp_regulator_info[] = {
-	AXP22_LDO(1, 3000,	3000,   0, LDO1,
-	0, 0,	LDO1EN,   0, 0), /* ldo1 for rtc */
-	AXP22_LDO(2,  700,	3300, 100, LDO2,
-	0,	 5,	LDO2EN,   6, 0), /* ldo2 for aldo1  */
-	AXP22_LDO(3,  700,	3300, 100, LDO3,
-	0,	 5,	LDO3EN,   7, 0), /* ldo3 for aldo2 */
-	AXP22_LDO(4,  700,	3300, 100, LDO4,
-	0,	 5,	LDO4EN,   7, 0), /* ldo3 for aldo3 */
-	AXP22_LDO(5,  700,	3300, 100, LDO5,
-	0,	 5,	LDO5EN,   3, 0), /* ldo5 for dldo1 */
-	AXP22_LDO(6,  700,	3300, 100, LDO6,
-	0,	 5,	LDO6EN,   4, 0), /* ldo6 for dldo2 */
-	AXP22_LDO(7,  700,	3300, 100, LDO7,
-	0,	 5,	LDO7EN,   5, 0), /* ldo7 for dldo3 */
-	AXP22_LDO(8,  700,	3300, 100, LDO8,
-	0,	 5,	LDO8EN,   6, 0), /* ldo8 for dldo4 */
-	AXP22_LDO(9,  700,	3300, 100, LDO9,
-	0,	 5,	LDO9EN,   0, 0), /* ldo9 for eldo1 */
-	AXP22_LDO(10,  700,	3300, 100, LDO10,
-	0,	 5,	LDO10EN,  1, 0), /* ldo10 for eldo2  */
-	AXP22_LDO(11,  700,	3300, 100, LDO11,
-	0,	 5,	LDO11EN,  2, 0), /* ldo11 for eldo3 */
-	AXP22_LDO(12,  700,	3300, 100, LDO12,
-	0,	 3,	LDO12EN,  0, 0), /* ldo12 for dc5ldo */
-	AXP22_DCDC(1, 1600,	3400, 100, DCDC1,
-	0,	 5,	DCDC1EN,  1, 0), /* buck1 for io */
-	AXP22_DCDC(2,  600,	1540,  20, DCDC2,
-	0, 6,	DCDC2EN,  2, 16), /* buck2 for cpu */
-	AXP22_DCDC(3,  600,	1860,  20, DCDC3,
-	0, 6,	DCDC3EN,  3, 16), /* buck3 for gpu */
-	AXP22_DCDC(4,  600,	1540,  20, DCDC4,
-	0, 6,	DCDC4EN,  4, 0), /* buck4 for core */
-	AXP22_DCDC(5, 1000,	2550,  50, DCDC5,
-	0, 5,	DCDC5EN,  5, 0), /* buck5 for ddr */
-	AXP22_LDO(IO0,  700,	3300, 100, LDOIO0,
-	0,	 5,	LDOIO0EN, 0, 0), /* ldoio0 */
-	AXP22_LDO(IO1,  700,	3300, 100, LDOIO1,
-	0,	 5,	LDOIO1EN, 0, 0), /* ldoio1 */
+	AXP22_DCDC(1, 1600, 3400, 100, DCDC1, 0, 5, DCDC1EN, 1, 0),
+	AXP22_DCDC(2, 600, 1540, 20, DCDC2, 0, 6, DCDC2EN, 2, 16),
+	AXP22_DCDC(3, 600, 1860, 20, DCDC3, 0, 6, DCDC3EN, 3, 16),
+	AXP22_DCDC(4, 600, 1540, 20, DCDC4, 0, 6, DCDC4EN, 4, 0),
+	AXP22_DCDC(5, 1000, 2550, 50, DCDC5, 0, 5, DCDC5EN, 5, 0),
+	AXP22_LDO(1, 3000, 3000, 0, LDO1, 0, 0, LDO1EN, 0, 0),
+	AXP22_LDO(2, 700, 3300, 100, LDO2, 0, 5, LDO2EN, 6, 0),
+	AXP22_LDO(3, 700, 3300, 100, LDO3, 0, 5, LDO3EN, 7, 0),
+	AXP22_LDO(4, 700, 3300, 100, LDO4, 0, 5, LDO4EN, 7, 0),
+	AXP22_LDO(5, 700, 3300, 100, LDO5, 0, 5, LDO5EN, 3, 0),
+	AXP22_LDO(6, 700, 3300, 100, LDO6, 0, 5, LDO6EN, 4, 0),
+	AXP22_LDO(7, 700, 3300, 100, LDO7, 0, 5, LDO7EN, 5, 0),
+	AXP22_LDO(8, 700, 3300, 100, LDO8, 0, 5, LDO8EN, 6, 0),
+	AXP22_LDO(9, 700, 3300, 100, LDO9, 0, 5, LDO9EN, 0, 0),
+	AXP22_LDO(10, 700, 3300, 100, LDO10, 0, 5, LDO10EN, 1, 0),
+	AXP22_LDO(11, 700, 3300, 100, LDO11, 0, 5, LDO11EN, 2, 0),
+	AXP22_LDO(12, 700, 3300, 100, LDO12, 0, 3, LDO12EN, 0, 0),
+	AXP22_LDO(IO0, 700, 3300, 100, LDOIO0, 0, 5, LDOIO0EN, 0, 0),
+	AXP22_LDO(IO1, 700, 3300, 100, LDOIO1, 0, 5, LDOIO1EN, 0, 0),
 };
 
 static ssize_t workmode_show(struct device *dev, struct device_attribute *attr,
@@ -596,55 +568,6 @@ static int axp_regulator_dt_parse_pdata(struct platform_device *pdev,
 
 		regu_initdata = (void *)of_get_regulator_init_data(
 		    &pdev->dev, reg_np, &axp_regulator_info[rdata->id].desc);
-
-		regu_initdata->constraints.name = reg_np->name;
-
-		if (!of_property_read_u32(reg_np, "nx,always_on", &val))
-			regu_initdata->constraints.always_on = val;
-		else
-			dev_err(&pdev->dev,
-				"%s() Error : always_on\n",
-				__func__);
-
-		if (!of_property_read_u32(reg_np, "nx,boot_on", &val))
-			regu_initdata->constraints.boot_on = val;
-		else
-			dev_err(&pdev->dev,
-				"%s() Error : always_on\n",
-				__func__);
-
-		regu_initdata->consumer_supplies = devm_kzalloc(
-		    &pdev->dev, sizeof(struct regulator_consumer_supply),
-		    GFP_KERNEL);
-		if (of_property_read_string(
-			reg_np, "regulator-name",
-			&regu_initdata->consumer_supplies->supply))
-			dev_err(&pdev->dev,
-				"%s() Error : regulator-name\n",
-				__func__);
-
-		regu_initdata->num_consumer_supplies = 1;
-		regu_initdata->constraints.valid_ops_mask =
-		    REGULATOR_CHANGE_VOLTAGE | REGULATOR_CHANGE_STATUS;
-
-#if defined(CONFIG_KP_OUTPUTINIT)
-		regu_initdata->constraints.initial_state = PM_SUSPEND_STANDBY;
-
-		if (!of_property_read_u32(reg_np, "nx,init_uV", &val))
-			regu_initdata->constraints.state_standby.uV = (int)val;
-		else
-			dev_err(&pdev->dev,
-				"%s() Error : nx,init_uV\n",
-				__func__);
-
-		if (!of_property_read_u32(reg_np, "nx,init_enable", &val))
-			regu_initdata->constraints.state_standby.enabled =
-			    (int)val;
-		else
-			dev_err(&pdev->dev,
-				"%s() Error : nx,init_enable\n",
-				__func__);
-#endif
 		rdata->platform_data = (void *)regu_initdata;
 		rdata++;
 	}
@@ -736,17 +659,6 @@ static int axp_regulator_probe(struct platform_device *pdev)
 			return PTR_ERR(axp_regulator_info[i].rdev);
 		}
 
-#ifdef ENABLE_DEBUG
-		dev_info(&pdev->dev,
-		" DTS data : %12s, %16s, desc.id:%2d, id:%2d, minV:%7d, maxV:%7d, initV:%7d, enabled:%d\n",
-		config.init_data->constraints.name,
-		config.init_data->consumer_supplies->supply,
-		tps_pdata->desc.id, regl_devs->id,
-		config.init_data->constraints.min_uV,
-		config.init_data->constraints.max_uV,
-		config.init_data->constraints.state_standby.uV,
-		config.init_data->constraints.state_standby.enabled);
-#endif
 		regl_devs++;
 	}
 

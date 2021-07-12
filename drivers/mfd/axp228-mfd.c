@@ -1,21 +1,12 @@
 /*
- * axp228-mfd.c  --  PMIC driver for the X-Powers AXP228
+ * Base driver for X-Powers AXP
  *
- * Copyright (C) 2016  Nexell Co., Ltd.
- * Author: Jongshin, Park <pjsin865@nexell.co.kr>
+ * Copyright (C) 2013 X-Powers, Ltd.
+ *  Zhang Donglu <zhangdonglu@x-powers.com>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
  */
 
 #include <linux/kernel.h>
@@ -1136,12 +1127,19 @@ static struct i2c_driver axp_mfd_driver = {
 	.id_table = axp_mfd_id_table,
 };
 
-static int __init axp_mfd_init(void) { return i2c_add_driver(&axp_mfd_driver); }
-subsys_initcall(axp_mfd_init);
+static int __init axp_mfd_init(void)
+{
+	return i2c_add_driver(&axp_mfd_driver);
+}
 
-static void __exit axp_mfd_exit(void) { i2c_del_driver(&axp_mfd_driver); }
+static void __exit axp_mfd_exit(void)
+{
+	i2c_del_driver(&axp_mfd_driver);
+}
+
+subsys_initcall(axp_mfd_init);
 module_exit(axp_mfd_exit);
 
-MODULE_DESCRIPTION("MFD Driver for X-Powers AXP228 PMIC");
-MODULE_AUTHOR("Jongsin Park <pjsin865@nexell.co.kr>");
+MODULE_DESCRIPTION("MFD Driver for X-Powers AXP PMIC");
+MODULE_AUTHOR("Weijin Zhong X-POWERS");
 MODULE_LICENSE("GPL");
