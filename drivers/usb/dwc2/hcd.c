@@ -88,6 +88,10 @@ static void dwc2_enable_common_interrupts(struct dwc2_hsotg *hsotg)
 	intmsk |= GINTSTS_WKUPINT | GINTSTS_USBSUSP |
 		  GINTSTS_SESSREQINT;
 
+#ifdef CONFIG_BATTERY_AXP228
+	intmsk |= GINTSTS_ENUMDONE;
+#endif
+
 	dwc2_writel(intmsk, hsotg->regs + GINTMSK);
 }
 

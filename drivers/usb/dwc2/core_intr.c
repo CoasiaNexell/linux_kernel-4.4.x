@@ -53,6 +53,24 @@
 #include "core.h"
 #include "hcd.h"
 
+#ifdef CONFIG_BATTERY_AXP228
+static int g_connect_state;
+int dwc_otg_get_connect_state(void)
+{
+	return g_connect_state;
+}
+EXPORT_SYMBOL(dwc_otg_get_connect_state);
+
+void dwc_otg_connect_state(u32 hprt0, int en)
+{
+	if (hprt0 & HPRT0_LNSTS_MASK)
+		en = 0;
+
+	g_connect_state = en;
+}
+EXPORT_SYMBOL(dwc_otg_connect_state);
+#endif
+
 static const char *dwc2_op_state_str(struct dwc2_hsotg *hsotg)
 {
 	switch (hsotg->op_state) {
@@ -113,7 +131,9 @@ static void dwc2_handle_otg_intr(struct dwc2_hsotg *hsotg)
 	u32 gotgint;
 	u32 gotgctl;
 	u32 gintmsk;
-
+#ifdef CONFIG_BATTERY_AXP228
+	u32 hprt0;
+#endif
 	gotgint = dwc2_readl(hsotg->regs + GOTGINT);
 	gotgctl = dwc2_readl(hsotg->regs + GOTGCTL);
 	dev_dbg(hsotg->dev, "++OTG Interrupt gotgint=%0x [%s]\n", gotgint,
@@ -152,6 +172,11 @@ static void dwc2_handle_otg_intr(struct dwc2_hsotg *hsotg)
 		gotgctl = dwc2_readl(hsotg->regs + GOTGCTL);
 		gotgctl &= ~GOTGCTL_DEVHNPEN;
 		dwc2_writel(gotgctl, hsotg->regs + GOTGCTL);
+
+#ifdef CONFIG_BATTERY_AXP228
+		hprt0 = dwc2_readl(hsotg->regs + HPRT0);
+		dwc_otg_connect_state(hprt0, 0);
+#endif
 	}
 
 	if (gotgint & GOTGINT_SES_REQ_SUC_STS_CHNG) {

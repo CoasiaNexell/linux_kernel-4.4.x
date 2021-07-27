@@ -1260,4 +1260,8 @@ extern void usb_ep_autoconfig_release(struct usb_ep *);
 
 extern void usb_ep_autoconfig_reset(struct usb_gadget *);
 
+#ifdef CONFIG_BATTERY_AXP228
+extern int dwc_otg_get_connect_state(void);
+extern void dwc_otg_connect_state(u32 hprt0, int en);
+#endif
 #endif /* __LINUX_USB_GADGET_H */
