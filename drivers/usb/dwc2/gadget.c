@@ -3578,6 +3578,15 @@ irq_retry:
 		dwc2_writel(GINTSTS_ENUMDONE, hsotg->regs + GINTSTS);
 
 		dwc2_hsotg_irq_enumdone(hsotg);
+
+#ifdef CONFIG_BATTERY_AXP228
+		if (!(gintsts & GINTSTS_MODEMIS)) {
+			u32 hprt0;
+
+			hprt0 = dwc2_readl(hsotg->regs + HPRT0);
+			dwc_otg_connect_state(hprt0, 1);
+		}
+#endif
 	}
 
 	if (gintsts & (GINTSTS_OEPINT | GINTSTS_IEPINT)) {
