@@ -1,0 +1,320 @@
+/*
+ * Copyright (C) 2021 Nexell Co., Ltd.
+ * Author: Jongshin Park <pjsin865@nexell.co.kr>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/* DCDC-LDO ID */
+#define AXP228_ID_DCDC1 0
+#define AXP228_ID_DCDC2 1
+#define AXP228_ID_DCDC3 2
+#define AXP228_ID_DCDC4 3
+#define AXP228_ID_DCDC5 4
+#define AXP228_ID_RTCLDO 5
+#define AXP228_ID_ALDO1 6
+#define AXP228_ID_ALDO2 7
+#define AXP228_ID_ALDO3 8
+#define AXP228_ID_DLDO1 9
+#define AXP228_ID_DLDO2 10
+#define AXP228_ID_DLDO3 11
+#define AXP228_ID_DLDO4 12
+#define AXP228_ID_ELDO1 13
+#define AXP228_ID_ELDO2 14
+#define AXP228_ID_ELDO3 15
+#define AXP228_ID_DC5LDO 16
+#define AXP228_ID_LDOIO0 17
+#define AXP228_ID_LDOIO1 18
+#define AXP228_ID_SUPPLY 19
+#define AXP228_ID_GPIO 20
+
+/* DCDC and LDO Min/Max/Step Value */
+#define AXP228_DCDC1_MIN 1600000 /* DCDC1 : 1600~3400, 100/setp */
+#define AXP228_DCDC1_MAX 3400000
+#define AXP228_DCDC1_STEP 100000
+#define AXP228_DCDC2_MIN 600000 /* DCDC2 : 600~1540, 20/step */
+#define AXP228_DCDC2_MAX 1540000
+#define AXP228_DCDC2_STEP 20000
+#define AXP228_DCDC3_MIN 600000 /* DCDC3 : 600~1860, 20/step */
+#define AXP228_DCDC3_MAX 1860000
+#define AXP228_DCDC3_STEP 20000
+#define AXP228_DCDC4_MIN 600000 /* DCDC4 : 600~1540, 20/step */
+#define AXP228_DCDC4_MAX 1540000
+#define AXP228_DCDC4_STEP 20000
+#define AXP228_DCDC5_MIN 1000000 /* DCDC5 : 1000~2550, 50/step */
+#define AXP228_DCDC5_MAX 2550000
+#define AXP228_DCDC5_STEP 50000
+#define AXP228_ALDO1_MIN 700000 /* ALDO1 : 700~3300, 100/step */
+#define AXP228_ALDO1_MAX 3300000
+#define AXP228_ALDO1_STEP 100000
+#define AXP228_ALDO2_MIN 700000 /* ALDO2 : 700~3300, 100/step */
+#define AXP228_ALDO2_MAX 3300000
+#define AXP228_ALDO2_STEP 100000
+#define AXP228_ALDO3_MIN 700000 /* ALDO3 : 700~3300, 100/step */
+#define AXP228_ALDO3_MAX 3300000
+#define AXP228_ALDO3_STEP 100000
+#define AXP228_DLDO1_MIN 700000 /* DLDO1 : 700~3300, 100/step */
+#define AXP228_DLDO1_MAX 3300000
+#define AXP228_DLDO1_STEP 100000
+#define AXP228_DLDO2_MIN 700000 /* DLDO2 : 700~3300, 100/step */
+#define AXP228_DLDO2_MAX 3300000
+#define AXP228_DLDO2_STEP 100000
+#define AXP228_DLDO3_MIN 700000 /* DLDO3 : 700~3300, 100/step */
+#define AXP228_DLDO3_MAX 3300000
+#define AXP228_DLDO3_STEP 100000
+#define AXP228_DLDO4_MIN 700000 /* DLDO4 : 700~3300, 100/step */
+#define AXP228_DLDO4_MAX 3300000
+#define AXP228_DLDO4_STEP 100000
+#define AXP228_ELDO1_MIN 700000 /* ELDO1 : 700~3300, 100/step */
+#define AXP228_ELDO1_MAX 3300000
+#define AXP228_ELDO1_STEP 100000
+#define AXP228_ELDO2_MIN 700000 /* ELDO2 : 700~3300, 100/step */
+#define AXP228_ELDO2_MAX 3300000
+#define AXP228_ELDO2_STEP 100000
+#define AXP228_ELDO3_MIN 700000 /* ELDO3 : 700~3300, 100/step */
+#define AXP228_ELDO3_MAX 3300000
+#define AXP228_ELDO3_STEP 100000
+#define AXP228_DC5LDO_MIN 700000 /* DC5LDO : 700~1400, 100/step */
+#define AXP228_DC5LDO_MAX 1400000
+#define AXP228_DC5LDO_STEP 100000
+
+/* DCDC-LDO Name */
+#define AXP228_DCDC1_NAME "VCC3P3_SYS" /* dcdc1 */
+#define AXP228_DCDC2_NAME "VCC1P1_ARM" /* dcdc2 */
+#define AXP228_DCDC3_NAME "VCC1P0_CORE_PM" /* dcdc3 */
+#define AXP228_DCDC4_NAME "VCC1P5_SYS" /* dcdc4 */
+#define AXP228_DCDC5_NAME "VCC1P5_DDR" /* dcdc5 */
+#define AXP228_ALDO1_NAME "VCC3P3_ALIVE" /* aldo1 */
+#define AXP228_ALDO2_NAME "VCC1P8_ALIVE" /* aldo2 */
+#define AXP228_ALDO3_NAME "VCC1P0_ALIVE" /* aldo3 */
+#define AXP228_DLDO1_NAME "VCC_WIDE" /* dldo1 */
+#define AXP228_DLDO2_NAME "VCC1P8_CAM" /* dldo2 */
+#define AXP228_DLDO3_NAME "NC1" /* dldo3 */
+#define AXP228_DLDO4_NAME "NC2" /* dldo4 */
+#define AXP228_ELDO1_NAME "VCC1P8_SYS" /* eldo1 */
+#define AXP228_ELDO2_NAME "VCC3P3_WIFI" /* eldo2 */
+#define AXP228_ELDO3_NAME "NC3" /* eldo3 */
+#define AXP228_DC5LDO_NAME "VCC1P2_CVBS" /* dc5ldo */
+
+regulators {
+	VCC3P3_SYS:axp22_dcdc1 {
+			nx,id = <AXP228_ID_DCDC1>;
+			regulator-name = AXP228_DCDC1_NAME;
+			regulator-min-microvolt = <AXP228_DCDC1_MIN>;
+			regulator-max-microvolt = <AXP228_DCDC1_MAX>;
+			regulator-always-on;
+			regulator-boot-on;
+			regulator-state-mem {
+				regulator-off-in-suspend;
+			};
+		};
+
+	VCC_DCDC1:axp22_dcdc2 { /* VCC1P1_ARM */
+			nx,id = <AXP228_ID_DCDC2>;
+			regulator-name = AXP228_DCDC2_NAME;
+			regulator-min-microvolt = <AXP228_DCDC2_MIN>;
+			regulator-max-microvolt = <AXP228_DCDC2_MAX>;
+			regulator-always-on;
+			regulator-boot-on;
+			regulator-ramp-delay = <1600>;
+			regulator-state-mem {
+				regulator-off-in-suspend;
+			};
+		};
+
+	VCC1P0_CORE_PM:axp22_dcdc3 {
+			nx,id = <AXP228_ID_DCDC3>;
+			regulator-name = AXP228_DCDC3_NAME;
+			regulator-min-microvolt = <AXP228_DCDC3_MIN>;
+			regulator-max-microvolt = <AXP228_DCDC3_MAX>;
+			regulator-always-on;
+			regulator-boot-on;
+			regulator-state-mem {
+				regulator-off-in-suspend;
+			};
+		};
+
+	VCC1P5_SYS:axp22_dcdc4 {
+			nx,id = <AXP228_ID_DCDC4>;
+			regulator-name = AXP228_DCDC4_NAME;
+			regulator-min-microvolt = <AXP228_DCDC4_MIN>;
+			regulator-max-microvolt = <AXP228_DCDC4_MAX>;
+			regulator-always-on;
+			regulator-boot-on;
+			regulator-state-mem {
+				regulator-off-in-suspend;
+			};
+		};
+
+	VCC1P5_DDR:axp22_dcdc5 {
+			nx,id = <AXP228_ID_DCDC5>;
+			regulator-name = AXP228_DCDC5_NAME;
+			regulator-min-microvolt = <AXP228_DCDC5_MIN>;
+			regulator-max-microvolt = <AXP228_DCDC5_MAX>;
+			regulator-always-on;
+			regulator-boot-on;
+			regulator-state-mem {
+				regulator-on-in-suspend;
+			};
+		};
+
+	VCC3P3_ALIVE:axp22_aldo1 {
+			nx,id = <AXP228_ID_ALDO1>;
+			regulator-name = AXP228_ALDO1_NAME;
+			regulator-min-microvolt = <AXP228_ALDO1_MIN>;
+			regulator-max-microvolt = <AXP228_ALDO1_MAX>;
+			regulator-always-on;
+			regulator-boot-on;
+			regulator-state-mem {
+				regulator-on-in-suspend;
+			};
+		};
+
+	VCC1P8_ALIVE:axp22_aldo2 {
+			nx,id = <AXP228_ID_ALDO2>;
+			regulator-name = AXP228_ALDO2_NAME;
+			regulator-min-microvolt = <AXP228_ALDO2_MIN>;
+			regulator-max-microvolt = <AXP228_ALDO2_MAX>;
+			regulator-always-on;
+			regulator-boot-on;
+			regulator-state-mem {
+				regulator-on-in-suspend;
+			};
+		};
+
+	VCC1P0_ALIVE:axp22_aldo3 {
+			nx,id = <AXP228_ID_ALDO3>;
+			regulator-name = AXP228_ALDO3_NAME;
+			regulator-min-microvolt = <AXP228_ALDO3_MIN>;
+			regulator-max-microvolt = <AXP228_ALDO3_MAX>;
+			regulator-always-on;
+			regulator-boot-on;
+			regulator-state-mem {
+				regulator-on-in-suspend;
+			};
+		};
+
+	VCC_WIDE:axp22_dldo1 {
+			nx,id = <AXP228_ID_DLDO1>;
+			regulator-name = AXP228_DLDO1_NAME;
+			regulator-min-microvolt = <AXP228_DLDO1_MIN>;
+			regulator-max-microvolt = <AXP228_DLDO1_MAX>;
+			regulator-always-on;
+			regulator-boot-on;
+			regulator-state-mem {
+				regulator-off-in-suspend;
+			};
+		};
+
+	VCC1P8_CAM:axp22_dldo2 {
+			nx,id = <AXP228_ID_DLDO2>;
+			regulator-name = AXP228_DLDO2_NAME;
+			regulator-min-microvolt = <AXP228_DLDO2_MIN>;
+			regulator-max-microvolt = <AXP228_DLDO2_MAX>;
+			regulator-boot-on;
+			regulator-state-mem {
+				regulator-off-in-suspend;
+			};
+		};
+
+	NC1:axp22_dldo3 {
+			nx,id = <AXP228_ID_DLDO3>;
+			regulator-name = AXP228_DLDO3_NAME;
+			regulator-min-microvolt = <AXP228_DLDO3_MIN>;
+			regulator-max-microvolt = <AXP228_DLDO3_MAX>;
+			regulator-state-mem {
+				regulator-off-in-suspend;
+			};
+		};
+
+	NC2:axp22_dldo4 {
+			nx,id = <AXP228_ID_DLDO4>;
+			regulator-name = AXP228_DLDO4_NAME;
+			regulator-min-microvolt = <AXP228_DLDO4_MIN>;
+			regulator-max-microvolt = <AXP228_DLDO4_MAX>;
+			regulator-state-mem {
+				regulator-off-in-suspend;
+			};
+		};
+
+	VCC1P8_SYS:axp22_eldo1 {
+			nx,id = <AXP228_ID_ELDO1>;
+			regulator-name = AXP228_ELDO1_NAME;
+			regulator-min-microvolt = <AXP228_ELDO1_MIN>;
+			regulator-max-microvolt = <AXP228_ELDO1_MAX>;
+			regulator-always-on;
+			regulator-boot-on;
+			regulator-state-mem {
+				regulator-off-in-suspend;
+			};
+		};
+
+	VCC3P3_WIFI:axp22_eldo2 {
+			nx,id = <AXP228_ID_ELDO2>;
+			regulator-name = AXP228_ELDO2_NAME;
+			regulator-min-microvolt = <AXP228_ELDO2_MIN>;
+			regulator-max-microvolt = <AXP228_ELDO2_MAX>;
+			regulator-boot-on;
+			regulator-state-mem {
+				regulator-off-in-suspend;
+			};
+		};
+
+	NC3:axp22_eldo3 {
+			nx,id = <AXP228_ID_ELDO3>;
+			regulator-name = AXP228_ELDO3_NAME;
+			regulator-min-microvolt = <AXP228_ELDO3_MIN>;
+			regulator-max-microvolt = <AXP228_ELDO3_MAX>;
+			regulator-state-mem {
+				regulator-off-in-suspend;
+			};
+		};
+}; /* regulators */
+
+#define AXP228_CHGVOL (4200 * 1000) /* 4100, 4220, 4200, 4240 */
+#define AXP228_SHUTDOWNVOL 2600
+#define AXP228_BATCAP 3000
+#define AXP228_STACHGCUR (1500 * 1000) /* 300~2550,100/step */
+#define AXP228_EARCHGCUR (1500 * 1000) /* 300~2550,100/step */
+#define AXP228_SUSCHGCUR (1500 * 1000) /* 300~2550,100/step */
+#define AXP228_CLSCHGCUR (1500 * 1000) /* 300~2550,100/step */
+#define AXP228_ENDCHGRATE 10 /* 10, 15 */
+#define AXP228_CHGEN 1
+#define AXP228_ADCFREQ 100 /* 100, 200, 400, 800 */
+#define AXP228_CHGPRETIME 50 /* 40, 50, 60, 70 */
+#define AXP228_CHGCSTTIME 480 /* 360, 480, 600, 720 */
+
+battery {
+	axp228 {
+		axp228,name = "axp228-supply";
+		supply_init_data {
+			pdata,chgcur = <AXP228_STACHGCUR>;
+			pdata,chgvol = <AXP228_CHGVOL>;
+			pdata,chgend = <AXP228_ENDCHGRATE>;
+			pdata,chgen = <AXP228_CHGEN>;
+			pdata,sample_time = <AXP228_ADCFREQ>;
+			pdata,chgpretime = <AXP228_CHGPRETIME>;
+			pdata,chgcsttime = <AXP228_CHGCSTTIME>;
+		};
+
+		supply_info {
+			info,name = "AXP228 SUPPLY";
+			info,vol_max = <AXP228_CHGVOL>;
+			info,vol_min = <AXP228_SHUTDOWNVOL>;
+			info,energy_full = <AXP228_BATCAP>;
+			info,use_for_apm = <1>;
+		};
+	};
+}; /* battery */
+
