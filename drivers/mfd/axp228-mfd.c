@@ -810,9 +810,11 @@ static void axp_debuginit(struct axp_mfd_chip *chip)
 #else
 static void axp_debuginit(struct axp_mfd_chip *chip)
 {
+#if 0
 	struct device *dev = chip->dev;
 
 	axp_mfd_register_dump(dev);
+#endif
 	return 0;
 }
 #endif
@@ -961,7 +963,7 @@ static void axp_power_off(void)
 
 static struct mfd_cell axp_devs[] = {
 	{ .name = "axp228-regulator", },
-	/* { .name = "axp228-supplyer", }, */
+	{ .name = "axp228-battery", },
 };
 
 #ifdef CONFIG_OF
@@ -1053,7 +1055,7 @@ static int axp_mfd_probe(struct i2c_client *client,
 	INIT_WORK(&axp228->irq_work, axp_mfd_irq_work);
 	BLOCKING_INIT_NOTIFIER_HEAD(&axp228->notifier_list);
 
-#ifdef ENABLE_DEBUG
+#if 0
 	axp_mfd_register_dump(axp228->dev);
 #endif
 

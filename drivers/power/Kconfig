@@ -529,6 +529,13 @@ config AXP20X_POWER
 	  This driver provides support for the power supply features of
 	  AXP20x PMIC.
 
+config BATTERY_AXP228
+	tristate "AXP228 battery charger driver"
+	depends on MFD_AXP228
+	help
+	 Say Y here to enable support for battery charging with AXP228
+	 PMIC chips.
+
 source "drivers/power/reset/Kconfig"
 
 endif # POWER_SUPPLY
