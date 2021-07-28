@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2016  Nexell Co., Ltd.
- * Author: Youngbok, Park <ybpark@nexell.co.kr>
+ * Copyright (C) 2021  Nexell Co., Ltd.
+ * Author: Jongshin park <pjsin865@coasia.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -16,14 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/dts-v1/;
 #include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
 #include "s5p4418.dtsi"
 
 / {
 	memory {
 		device_type = "memory";
-		reg = <0x40000000 0x40000000>;
+		reg = <0x71000000 0x40000000>;
+	};
+
+	aliases {
+		i2c3 = &i2c_gpio3;
 	};
 
 	soc {
@@ -53,14 +58,14 @@
 			cap-mmc-highspeed;
 			broken-cd;
 			non-removable;
-			clock-frequency = <200000000>;
+			clock-frequency = <100000000>;
 			card-detect-delay = <200>;
 			disable-wp;
 			status = "okay";
 			nexell,drive_dly = <0x0>;
-			nexell,drive_shift = <0x02>;
+			nexell,drive_shift = <0x03>;
 			nexell,sample_dly = <0x00>;
-			nexell,sample_shift = <0x1>;
+			nexell,sample_shift = <0x2>;
 		};
 
 		dw_mmc_0:dw_mmc@c0062000 {
@@ -73,16 +78,10 @@
 			cd-gpios = <&alive_0 1>;
 			cd-inverted;
 			nexell,drive_dly = <0x0>;
-			nexell,drive_shift = <0x02>;
+			nexell,drive_shift = <0x03>;
 			nexell,sample_dly = <0x00>;
-			nexell,sample_shift = <0x01>;
-			status = "okay";
-		};
-
-		spdiftx@c0059000 {
-			pcm-bit = <16>;
-			sample_rate = <48000>;
-			status = "okay";
+			nexell,sample_shift = <0x02>;
+			status = "disabled";
 		};
 
 		watchdog@c0019000 {
@@ -98,6 +97,7 @@
 		};
 
 		ehci@c0030000 {
+			//samsung,vbus-gpio = <&gpio_d 21 0>;
 			status = "okay";
 			port@0 {
 				status = "okay";
@@ -112,7 +112,10 @@
 		};
 
 		dwc2otg@c0040000 {
+			pinctrl-names = "default";
+			pinctrl-0 = <&otg_pwron>;
 			gpios = <&gpio_d 21 0>;
+			nouse_idcon = <1>;
 			status = "okay";
 		};
 
@@ -140,17 +143,23 @@
 				reg = <0x11>;
 			};
 		};
+
+		pinctrl@C0010000 {
+			pinctrl-names = "default";
+			pinctrl-0 = <&initial>;
+
+			initial: initial-state {
+				PIN_OUT(gpiod-21, LOW, FUNC0, NONE, STR3);
+			};
+
+			otg_pwron:otg_pwron {
+				nexell,pins = "gpiod-21";
+				nexell,pin-function = <0>;
+				nexell,pin-pull = <0>;
+				nexell,pin-strength = <3>;
+			};
+		};
 	};	/*** soc ***/
-
-	spdif_out: spdif-out {
-		compatible = "linux,spdif-dit";
-	};
-
-	spdif-transceiver {
-		compatible = "nexell,spdif-transceiver";
-		sample_rate = <48000>;
-		format = "S16";
-	};
 
 	sound {
 		compatible = "nexell,nexell-es8316";
@@ -164,5 +173,85 @@
 		i2s-controller = <&i2s_0>;
 		audio-codec = <&es8316>;
 	};
+
+	i2c_gpio3: i2c@3 {
+		compatible = "i2c-gpio";
+		gpios = <&gpio_d 16 0 /* sda */
+			&gpio_d 20 0>; /* scl */
+		i2c-gpio,delay-us = <1>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		axp228@34 {
+			compatible = "x-powers,axp228";
+			reg = <0x34>;
+			interrupt-parent = <&alive_0>;
+			interrupts = <0x4 IRQ_TYPE_EDGE_FALLING>;
+			nx,id = <0>;
+			#include "s5p4418-drone_ref-axp228.dtsi"
+		};
+	};
+};
+
+&dp_drm {
+	status = "okay";
+	ports {
+		port@0 {
+			reg = <0>;
+			back_color = < 0x0 >;
+			color_key = < 0x0 >;
+			plane-names = "rgb", "primary", "video";
+		};
+		port@1 {
+			reg = <1>;
+			back_color = < 0x0 >;
+			color_key = < 0xff00ff >;
+			plane-names = "primary", "video";
+		};
+	};
+};
+
+&dp_drm_rgb {
+	status = "ok";
+	pinctrl-names = "default";
+	pinctrl-0 = <&dp_rgb_vclk &dp_rgb_vsync &dp_rgb_hsync
+	&dp_rgb_de &dp_rgb_R &dp_rgb_G &dp_rgb_B>;
+	/* enable-gpios = <&gpio_c 2 0>; */
+	/* remote-endpoint = <&rgb_panel>; */
+	/* panel-mpu = <0>; */
+	/* crtcs-possible-mask = <0x1>; */
+
+	display-timing {
+		clock-frequency = <88000000>;
+
+		hactive = <1024>;
+		vactive = <600>;
+
+		hback-porch = <30>;
+		hfront-porch = <30>;
+		hsync-len = <4>;
+
+		vback-porch = <10>;
+		vfront-porch = <10>;
+		vsync-len = <2>;
+
+		hsync-active = <1>;
+		vsync-active = <1>;
+		pixelclk-active = <1>;
+		de-active = <1>;
+	};
+
+	dp_control {
+		clk_src_lv0 = <1>;
+		clk_div_lv0 = <9>;
+		clk_src_lv1 = <7>;
+		clk_div_lv1 = <1>;
+		out_format = <3>;
+	};
+};
+
+&dp_drm_hdmi {
+	ddc-i2c-bus = <&i2c_2>;
+	status = "disabled";
 };
 
