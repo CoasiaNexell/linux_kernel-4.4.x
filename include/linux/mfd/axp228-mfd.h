@@ -288,10 +288,10 @@ struct axp_mfd_chip_ops {
 };
 
 extern struct device *axp_get_dev(void);
-extern int axp_register_notifier(struct device *dev, struct notifier_block *nb,
-				 uint64_t irqs);
+extern int axp_register_notifier(struct device *dev,
+	struct notifier_block *nb, uint64_t irqs);
 extern int axp_unregister_notifier(struct device *dev,
-				   struct notifier_block *nb, uint64_t irqs);
+	struct notifier_block *nb, uint64_t irqs);
 
 /* NOTE: the functions below are not intended for use outside
  * of the AXP sub-device drivers
@@ -303,5 +303,8 @@ extern int axp_reads(struct device *dev, int reg, int len, uint8_t *val);
 extern int axp_update(struct device *dev, int reg, uint8_t val, uint8_t mask);
 extern int axp_set_bits(struct device *dev, int reg, uint8_t bit_mask);
 extern int axp_clr_bits(struct device *dev, int reg, uint8_t bit_mask);
+extern void axp_run_irq_handler(void);
+
 extern struct i2c_client *axp;
+
 #endif /* __LINUX_PMIC_AXP_H */
