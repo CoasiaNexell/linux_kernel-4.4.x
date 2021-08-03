@@ -794,6 +794,10 @@ int vpu_dec_open_instance(struct nx_vpu_ctx *ctx)
 		ctx->codec_mode = CODEC_STD_MPEG4;
 		openArg.mp4Class = 2;
 		break;
+#ifdef USE_DECODER_DIVX
+	case V4L2_PIX_FMT_DIV3:
+		ctx->codec_mode = CODEC_STD_DIV3;
+		break;
 	case V4L2_PIX_FMT_DIV4:
 	case V4L2_PIX_FMT_DIVX:
 		ctx->codec_mode = CODEC_STD_MPEG4;
@@ -804,11 +808,9 @@ int vpu_dec_open_instance(struct nx_vpu_ctx *ctx)
 		ctx->codec_mode = CODEC_STD_MPEG4;
 		openArg.mp4Class = 1;
 		break;
+#endif
 	case V4L2_PIX_FMT_H263:
 		ctx->codec_mode = CODEC_STD_H263;
-		break;
-	case V4L2_PIX_FMT_DIV3:
-		ctx->codec_mode = CODEC_STD_DIV3;
 		break;
 	case V4L2_PIX_FMT_FLV1:
 		/* Sorenson spark */
@@ -816,14 +818,18 @@ int vpu_dec_open_instance(struct nx_vpu_ctx *ctx)
 		openArg.mp4Class = 256;
 		break;
 #ifndef CONFIG_ARCH_NXP3220_COMMON
+#ifdef USE_DECODER_VC1
 	case V4L2_PIX_FMT_WMV9:
 	case V4L2_PIX_FMT_WVC1:
 		ctx->codec_mode = CODEC_STD_VC1;
 		break;
+#endif
+#ifdef USE_DECODER_RV
 	case V4L2_PIX_FMT_RV8:
 	case V4L2_PIX_FMT_RV9:
 		ctx->codec_mode = CODEC_STD_RV;
 		break;
+#endif
 	case V4L2_PIX_FMT_VP8:
 		ctx->codec_mode = CODEC_STD_VP8;
 		break;
