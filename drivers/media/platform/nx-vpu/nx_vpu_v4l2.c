@@ -1067,14 +1067,14 @@ static int nx_vpu_close(struct file *file)
 
 	FUNC_IN();
 
-	mutex_lock(&g_vpu_mutex);
+//	mutex_lock(&g_vpu_mutex);
 	mutex_lock(&dev->dev_mutex);
 
 	if (ctx->is_initialized) {
 		ctx->vpu_cmd = SEQ_END;
-		mutex_unlock(&g_vpu_mutex);
+//		mutex_unlock(&g_vpu_mutex);
 		nx_vpu_try_run(ctx);
-		mutex_lock(&g_vpu_mutex);
+//		mutex_lock(&g_vpu_mutex);
 	}
 
 	if (ctx->is_encoder)
@@ -1111,7 +1111,7 @@ static int nx_vpu_close(struct file *file)
 	kfree(ctx);
 
 	mutex_unlock(&dev->dev_mutex);
-	mutex_unlock(&g_vpu_mutex);
+//	mutex_unlock(&g_vpu_mutex);
 
 	return 0;
 }
