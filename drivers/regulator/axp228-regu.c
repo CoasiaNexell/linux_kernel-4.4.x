@@ -682,6 +682,7 @@ static int axp_regulator_suspend(struct device *dev)
 	struct regulator_state *state_standby = &constraints->state_standby;
 	int ret = 0;
 
+#if 0 /* do not need. */
 	axp_suspend_status = 0;
 
 	/* When the CPU to wake up, it operates at 800MHz speeds.
@@ -691,8 +692,9 @@ static int axp_regulator_suspend(struct device *dev)
 		if (state_standby)
 			ret = axp_set_voltage(rdev, 1100000, 1100000, NULL);
 	}
-
+#endif
 	axp_suspend_status = 1;
+
 	return ret;
 }
 
