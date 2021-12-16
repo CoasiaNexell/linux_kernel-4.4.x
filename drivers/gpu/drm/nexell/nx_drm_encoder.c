@@ -168,11 +168,11 @@ static irqreturn_t nx_drm_vblank_irq_handler(int irq, void *arg)
 	if (WARN_ON(!display))
 		return IRQ_NONE;
 
+	drm_crtc_handle_vblank(crtc);
+
 	/* done irq */
 	if (display->ops && display->ops->irq_done)
 		display->ops->irq_done(display, nx_crtc->pipe);
-
-	drm_crtc_handle_vblank(crtc);
 
 	DUMP_FPS_TIME(nx_crtc->pipe);
 

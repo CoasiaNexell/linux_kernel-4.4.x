@@ -90,6 +90,7 @@ struct nx_drm_crtc {
 	int pipe;		/* crtc index */
 	int irq;
 	bool irq_install;
+	struct drm_pending_vblank_event *event;
 	bool suspended;
 	struct nx_drm_cluster *cluster;
 };
