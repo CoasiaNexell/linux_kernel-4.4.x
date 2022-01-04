@@ -31,9 +31,14 @@
 #include "dw_mmc-pltfm.h"
 #include "dw_mmc-nexell.h"
 
+#include <dt-bindings/tieoff/s5p6818-tieoff.h>
+#include <soc/nexell/tieoff.h>
+
 struct dw_mci_nexell_priv_data {
 	struct	reset_control *rst;
 	u32	clkdly;
+	u32	tieoff_bit;
+	u32	tieoff_val;
 };
 
 static int dw_mci_nexell_priv_init(struct dw_mci *host)
@@ -46,6 +51,10 @@ static int dw_mci_nexell_priv_init(struct dw_mci *host)
 	}
 
 	mci_writel(host, CLKCTRL, priv->clkdly);
+
+	if(priv->tieoff_bit) {
+		nx_tieoff_set(priv->tieoff_bit, priv->tieoff_val);
+	}
 
 	return 0;
 }
@@ -75,6 +84,7 @@ static int dw_mci_nexell_resume(struct device *dev)
 	clk_prepare_enable(host->ciu_clk);
 
 	dw_mci_nexell_priv_init(host);
+
 	return dw_mci_resume(host);
 }
 
@@ -93,6 +103,7 @@ static int dw_mci_nexell_parse_dt(struct dw_mci *host)
 	struct dw_mci_nexell_priv_data *priv;
 	struct device_node *np = host->dev->of_node;
 	int drive_delay, drive_shift, sample_delay, sample_shift;
+	int tieoff_bit, tieoff_val;
 
 	priv = devm_kzalloc(host->dev, sizeof(*priv), GFP_KERNEL);
 	if (!priv)
@@ -109,6 +120,12 @@ static int dw_mci_nexell_parse_dt(struct dw_mci *host)
 
 	if (of_property_read_u32(np, "nexell,sample_shift", &sample_shift))
 		sample_shift = 1;
+
+	if (!(of_property_read_u32_index(np, "soc,tieoff", 0, &tieoff_bit)))
+		priv->tieoff_bit = (u32)tieoff_bit;
+
+	if (!(of_property_read_u32_index(np, "soc,tieoff", 1, &tieoff_val)))
+		priv->tieoff_val = (u32)tieoff_val;
 
 	priv->clkdly = NX_MMC_CLK_DELAY(drive_delay, drive_shift,
 					sample_delay, sample_shift);
