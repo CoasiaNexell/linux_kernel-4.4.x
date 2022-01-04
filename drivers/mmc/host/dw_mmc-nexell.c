@@ -34,6 +34,7 @@
 struct dw_mci_nexell_priv_data {
 	struct	reset_control *rst;
 	u32	clkdly;
+	bool	tieoff_ctrl;
 };
 
 static int dw_mci_nexell_priv_init(struct dw_mci *host)
@@ -70,11 +71,23 @@ static int dw_mci_nexell_suspend(struct device *dev)
 static int dw_mci_nexell_resume(struct device *dev)
 {
 	struct dw_mci *host = dev_get_drvdata(dev);
+	struct dw_mci_nexell_priv_data *priv = host->priv;
+	uint32_t regval = 0;
+	void __iomem	*regs;
 
 	clk_prepare_enable(host->biu_clk);
 	clk_prepare_enable(host->ciu_clk);
 
 	dw_mci_nexell_priv_init(host);
+
+	if(priv->tieoff_ctrl) {
+		regs = ioremap_nocache((phys_addr_t)PHY_BASEADDR_SYSTEM_TIEOFF , 4);
+		regval = __raw_readl(regs);
+		regval |= (1 << 5);
+		__raw_writel(regval, regs);
+		iounmap((void *)regs);
+	}
+
 	return dw_mci_resume(host);
 }
 
@@ -109,6 +122,9 @@ static int dw_mci_nexell_parse_dt(struct dw_mci *host)
 
 	if (of_property_read_u32(np, "nexell,sample_shift", &sample_shift))
 		sample_shift = 1;
+
+	if (of_get_property(np, "soc,tieoff", NULL))
+		priv->tieoff_ctrl = true;
 
 	priv->clkdly = NX_MMC_CLK_DELAY(drive_delay, drive_shift,
 					sample_delay, sample_shift);

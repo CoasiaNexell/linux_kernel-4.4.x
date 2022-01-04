@@ -19,6 +19,8 @@
 #ifndef _DW_MMC_NEXELL_H_
 #define _DW_MMC_NEXELL_H_
 
+#define PHY_BASEADDR_SYSTEM_TIEOFF	0xC0011000
+
 #define SDMMC_CLKCTRL			0x114
 
 #define NX_SDMMC_CLK_DIV		2
