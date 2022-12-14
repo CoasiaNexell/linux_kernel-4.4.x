@@ -662,6 +662,7 @@ static void nx_vpu_dec_buf_queue(struct vb2_buffer *vb)
 		list_add_tail(&buf->list, &ctx->codec.dec.dpb_queue);
 		dec_ctx->dpb_queue_cnt++;
 	} else {
+		spin_unlock_irqrestore(&dev->irqlock, flags);
 		NX_ErrMsg("unsupported buffer type(%d)\n", vq->type);
 		return;
 	}
@@ -987,9 +988,8 @@ int vpu_dec_parse_vid_cfg(struct nx_vpu_ctx *ctx)
 	vb2_set_plane_payload(&buf->vb, 0, ctx->strm_size);
 	vbuf->field = dec_ctx->interlace_flg[0];
 	vbuf->flags = ctx->codec.dec.frame_buf_delay;
-
-	vb2_buffer_done(&buf->vb, VB2_BUF_STATE_DONE);
-
+	vb2_buffer_done(&buf->vb,
+		ret == VPU_RET_OK ? VB2_BUF_STATE_DONE : VB2_BUF_STATE_QUEUED);
 	spin_unlock_irqrestore(&ctx->dev->irqlock, flags);
 
 	return ret;
@@ -1349,6 +1349,7 @@ int alloc_decoder_memory(struct nx_vpu_ctx *ctx)
 	mvSize = (mvSize * 3) / 2;
 	mvSize = (mvSize + 4) / 5;
 	mvSize = ((mvSize + 7) / 8) * 8;
+	mvSize = ALIGN(mvSize, 4096);
 
 	if (width == 0 || height == 0 || mvSize == 0) {
 		NX_ErrMsg("Invalid memory parameters!!!\n");
@@ -1360,8 +1361,8 @@ int alloc_decoder_memory(struct nx_vpu_ctx *ctx)
 	dec_ctx->col_mv_buf = nx_alloc_memory(drv, mvSize *
 		dec_ctx->frame_buffer_cnt, 4096);
 	if (0 == dec_ctx->col_mv_buf) {
-		NX_ErrMsg("col_mv_buf allocation failed.(size=%d,align=%d,buffer_cnt=%d,(%dx%d))\n",
-			mvSize * dec_ctx->frame_buffer_cnt, 4096,dec_ctx->frame_buffer_cnt,ctx->width,ctx->height);
+		NX_ErrMsg("col_mv_buf allocation failed.(size=%d,align=%d)\n",
+			mvSize * dec_ctx->frame_buffer_cnt, 4096);
 		goto Error_Exit;
 	}
 
