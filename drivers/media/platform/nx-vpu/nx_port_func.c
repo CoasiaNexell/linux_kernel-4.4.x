@@ -123,8 +123,14 @@ struct nx_vid_memory_info *nx_alloc_frame_memory(void *drv, int32_t width,
 	cSize = cWidth * cHeight;
 
 	mem[0] = nx_alloc_memory(drv, lSize, align);
+	if (NULL = mem[0])
+		goto Error_Exit;
 	for (i = 1 ; i <= chroma_planes ; i++)
+	{
 		mem[i] = nx_alloc_memory(drv, cSize, align);
+		if (NULL == mem[i])
+			goto Error_Exit;
+	}
 
 	vid->width  = width;
 	vid->height = height;
